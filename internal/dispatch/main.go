@@ -49,7 +49,7 @@ func handleConnection(conn net.Conn) {
 		case "VER":
 			commands.HandleVER(conn, arguments)
 		case "INF":
-			commands.HandleINF(conn, transactionID)
+			commands.HandleINF(conn, arguments)
 		case "USR":
 			commands.HandleUSRDispatch(conn, transactionID)
 		case "OUT":

@@ -3,8 +3,17 @@ package commands
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
-func HandleINF(conn net.Conn, transactionID string) {
-	conn.Write([]byte(fmt.Sprintf("INF %s MD5\r\n", transactionID)))
+var supportedAuthMethods = []string{"MD5"}
+
+func HandleINF(conn net.Conn, arguments string) {
+	transactionID, _, err := parseTransactionID(arguments)
+	if err != nil {
+		conn.Close()
+		return
+	}
+
+	conn.Write([]byte(fmt.Sprintf("INF %s %s\r\n", transactionID, strings.Join(supportedAuthMethods, " "))))
 }
