@@ -1,7 +1,12 @@
 package commands
 
-import "net"
+import (
+	"log"
+	"net"
+)
 
 func HandleOUT(conn net.Conn) {
-	conn.Write([]byte("OUT\r\n"))
+	res := "OUT\r\n"
+	log.Println(">>>", res)
+	conn.Write([]byte(res))
 }

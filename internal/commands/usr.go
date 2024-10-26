@@ -1,11 +1,31 @@
 package commands
 
 import (
-	"fmt"
-	"msnserver/config"
+	"errors"
 	"net"
+	"strings"
 )
 
-func HandleUSRDispatch(conn net.Conn, transactionID string) {
-	conn.Write([]byte(fmt.Sprintf("XFR %s NS %s:%s 0 %s:%s\r\n", transactionID, config.Config.DispatchServer.NotificationServerAddr, config.Config.DispatchServer.NotificationServerPort, config.Config.DispatchServer.ServerAddr, config.Config.DispatchServer.ServerPort)))
+type authParams struct {
+	authMethod string
+	authState  string
+	username   string
+}
+
+func HandleReceiveUSR(conn net.Conn, arguments string) (string, *authParams, error) {
+	arguments, _, _ = strings.Cut(arguments, "\r\n")
+	transactionID, arguments, err := parseTransactionID(arguments)
+	if err != nil {
+		return "", nil, err
+	}
+
+	splitArguments := strings.Split(arguments, " ")
+	if len(splitArguments) != 3 {
+		err := errors.New("Invalid transaction")
+		return "", nil, err
+	}
+
+	authParams := authParams{authMethod: splitArguments[0], authState: splitArguments[1], username: splitArguments[2]}
+
+	return transactionID, &authParams, nil
 }

@@ -1,7 +1,7 @@
 package dispatch
 
 import (
-	"fmt"
+	"log"
 	"msnserver/config"
 	"msnserver/internal/commands"
 	"net"
@@ -9,22 +9,26 @@ import (
 )
 
 func StartDispatchServer() {
-	fmt.Println("Starting MSN dispatch server...")
+	log.Println("Starting MSN dispatch server...")
 
 	config.LoadConfig()
 
 	ln, err := net.Listen("tcp", config.Config.DispatchServer.ServerAddr+":"+config.Config.DispatchServer.ServerPort)
 	if err != nil {
-		fmt.Println("Error: ", err)
+		log.Fatalln("Error starting server:", err)
 	}
 
-	fmt.Println("Listening on:", config.Config.DispatchServer.ServerAddr+":"+config.Config.DispatchServer.ServerPort)
+	defer ln.Close()
+
+	log.Println("Listening on:", config.Config.DispatchServer.ServerAddr+":"+config.Config.DispatchServer.ServerPort)
 
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			fmt.Println("Error: ", err)
+			log.Println("Error accepting connection:", err)
+			return
 		}
+		log.Println("Client connected:", conn.RemoteAddr())
 		go handleConnection(conn)
 	}
 }
@@ -32,32 +36,43 @@ func StartDispatchServer() {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	for conn != nil {
-
+	for {
 		buffer := make([]byte, 1024)
 		_, err := conn.Read(buffer)
 		if err != nil {
-			fmt.Println("Error: ", err)
+			log.Println("Error:", err)
 			return
 		}
 
 		data := string(buffer)
+		log.Println("<<<", data)
 
 		command, arguments, _ := strings.Cut(data, " ")
 
 		switch command {
 		case "VER":
-			commands.HandleVER(conn, arguments)
+			err := commands.HandleVER(conn, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				break
+			}
 		case "INF":
-			commands.HandleINF(conn, arguments)
+			err := commands.HandleINF(conn, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				break
+			}
 		case "USR":
-			commands.HandleUSRDispatch(conn, transactionID)
+			transactionID, _, err := commands.HandleReceiveUSR(conn, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
+			commands.HandleXFR(conn, transactionID)
 		case "OUT":
 			commands.HandleOUT(conn)
 		default:
-			fmt.Println("Unknown command: ", command)
+			log.Println("Unknown command:", command)
 		}
 	}
-
-	fmt.Println("Client disconnected")
 }

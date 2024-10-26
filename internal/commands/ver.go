@@ -1,19 +1,20 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 )
 
 var supportedProtocols = []string{"MSNP2", "CVR0"}
 
-func HandleVER(conn net.Conn, arguments string) {
+func HandleVER(conn net.Conn, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
-		conn.Close()
-		return
+		return err
 	}
 	clientProtocols := strings.Split(arguments, " ")
 
@@ -27,10 +28,14 @@ func HandleVER(conn net.Conn, arguments string) {
 	}
 
 	if len(serverProtocols) < 2 {
-		conn.Write([]byte(fmt.Sprintf("VER %s %s\r\n", transactionID, "0")))
-		conn.Close()
-		return
+		res := fmt.Sprintf("VER %s %s\r\n", transactionID, "0")
+		log.Println(">>>", res)
+		conn.Write([]byte(res))
+		return errors.New("Protocol mismatch")
 	}
 
-	conn.Write([]byte(fmt.Sprintf("VER %s %s\r\n", transactionID, strings.Join(serverProtocols, " "))))
+	res := fmt.Sprintf("VER %s %s\r\n", transactionID, strings.Join(serverProtocols, " "))
+	log.Println(">>>", res)
+	conn.Write([]byte(res))
+	return nil
 }
