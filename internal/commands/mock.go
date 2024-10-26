@@ -13,7 +13,3 @@ type mockConn struct {
 func (m *mockConn) Write(b []byte) (n int, err error) {
 	return m.buffer.Write(b)
 }
-
-func (m *mockConn) Close() error {
-	return nil
-}
