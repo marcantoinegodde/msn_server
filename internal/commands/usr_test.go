@@ -8,15 +8,22 @@ func TestHandleUSRDispatch(t *testing.T) {
 	tests := []struct {
 		arguments             string
 		expectedTransactionID string
-		expectedAuthParams    *authParams
-		expectedErr           error
+		expectedAuthParams    authParams
+		ok                    bool
 	}{
-		{"2 MD5 I example@passport.com", "2", &authParams{authMethod: "MD5", authState: "I", username: "example@passport.com"}, nil},
+		{"2 MD5 I example@passport.com", "2", authParams{authMethod: "MD5", authState: "I", username: "example@passport.com"}, true},
+		{"MD5 I example@passport.com", "", authParams{}, false},
+		{"2 MD5 I", "", authParams{}, false},
+		{"2 MD5 I example@passport.com foo", "", authParams{}, false},
 	}
 
 	for _, tt := range tests {
 		mock := &mockConn{}
 		gotTransactionID, gotAuthParams, gotErr := HandleReceiveUSR(mock, tt.arguments)
+
+		if (gotErr == nil) != tt.ok {
+			t.Errorf("Error HandleReceiveUSR(%q) = %v, want %v", tt.arguments, gotErr == nil, tt.ok)
+		}
 
 		if gotTransactionID != tt.expectedTransactionID {
 			t.Errorf("TransactionID HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotTransactionID, tt.expectedTransactionID)
@@ -34,8 +41,5 @@ func TestHandleUSRDispatch(t *testing.T) {
 			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotAuthParams.username, tt.expectedAuthParams.username)
 		}
 
-		if gotErr != tt.expectedErr {
-			t.Errorf("Error HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotErr, tt.expectedErr)
-		}
 	}
 }
