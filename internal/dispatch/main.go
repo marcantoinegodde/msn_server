@@ -26,7 +26,7 @@ func StartDispatchServer() {
 		conn, err := ln.Accept()
 		if err != nil {
 			log.Println("Error accepting connection:", err)
-			break
+			return
 		}
 		log.Println("Client connected:", conn.RemoteAddr())
 		go handleConnection(conn)
@@ -41,7 +41,7 @@ func handleConnection(conn net.Conn) {
 		_, err := conn.Read(buffer)
 		if err != nil {
 			log.Println("Error:", err)
-			break
+			return
 		}
 
 		data := string(buffer)
@@ -54,21 +54,22 @@ func handleConnection(conn net.Conn) {
 			err := commands.HandleVER(conn, arguments)
 			if err != nil {
 				log.Println("Error:", err)
-				break
+				return
 			}
 		case "INF":
 			err := commands.HandleINF(conn, arguments)
 			if err != nil {
 				log.Println("Error:", err)
-				break
+				return
 			}
 		case "USR":
 			transactionID, _, err := commands.HandleReceiveUSR(conn, arguments)
 			if err != nil {
 				log.Println("Error:", err)
-				break
+				return
 			}
 			commands.HandleXFR(conn, transactionID)
+			return
 		case "OUT":
 			commands.HandleOUT(conn)
 		default:
