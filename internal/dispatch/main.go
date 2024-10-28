@@ -34,7 +34,13 @@ func StartDispatchServer() {
 }
 
 func handleConnection(conn net.Conn) {
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Println("Error closing connection:", err)
+		} else {
+			log.Println("Client disconnected:", conn.RemoteAddr())
+		}
+	}()
 
 	for {
 		buffer := make([]byte, 1024)
