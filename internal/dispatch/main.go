@@ -80,6 +80,7 @@ func handleConnection(conn net.Conn) {
 			commands.HandleOUT(conn)
 		default:
 			log.Println("Unknown command:", command)
+			return
 		}
 	}
 }
