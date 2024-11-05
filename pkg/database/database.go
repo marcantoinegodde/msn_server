@@ -18,5 +18,7 @@ func Load() (*gorm.DB, error) {
 		return nil, err
 	}
 
+	db.AutoMigrate(&User{})
+
 	return db, nil
 }
