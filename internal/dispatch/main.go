@@ -6,13 +6,11 @@ import (
 	"msnserver/internal/commands"
 	"net"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
-func StartDispatchServer() {
-	log.Println("Starting MSN dispatch server...")
-
-	config.LoadConfig()
-
+func StartDispatchServer(db *gorm.DB) {
 	ln, err := net.Listen("tcp", config.Config.DispatchServer.ServerAddr+":"+config.Config.DispatchServer.ServerPort)
 	if err != nil {
 		log.Fatalln("Error starting server:", err)
@@ -29,11 +27,11 @@ func StartDispatchServer() {
 			return
 		}
 		log.Println("Client connected:", conn.RemoteAddr())
-		go handleConnection(conn)
+		go handleConnection(conn, db)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, db *gorm.DB) {
 	defer func() {
 		if err := conn.Close(); err != nil {
 			log.Println("Error closing connection:", err)
@@ -69,7 +67,7 @@ func handleConnection(conn net.Conn) {
 				return
 			}
 		case "USR":
-			transactionID, _, err := commands.HandleReceiveUSR(conn, arguments)
+			transactionID, _, err := commands.HandleReceiveUSR(conn, db, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return

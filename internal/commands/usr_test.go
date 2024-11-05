@@ -2,6 +2,8 @@ package commands
 
 import (
 	"testing"
+
+	"gorm.io/gorm"
 )
 
 func TestHandleUSRDispatch(t *testing.T) {
@@ -18,8 +20,9 @@ func TestHandleUSRDispatch(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		mock := &mockConn{}
-		gotTransactionID, gotAuthParams, gotErr := HandleReceiveUSR(mock, tt.arguments)
+		mockConn := &mockConn{}
+		mockDB := &gorm.DB{}
+		gotTransactionID, gotAuthParams, gotErr := HandleReceiveUSR(mockConn, mockDB, tt.arguments)
 
 		if (gotErr == nil) != tt.ok {
 			t.Errorf("Error HandleReceiveUSR(%q) = %v, want %v", tt.arguments, gotErr == nil, tt.ok)

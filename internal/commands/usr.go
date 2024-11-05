@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type authParams struct {
@@ -12,7 +14,7 @@ type authParams struct {
 	username   string
 }
 
-func HandleReceiveUSR(conn net.Conn, arguments string) (string, authParams, error) {
+func HandleReceiveUSR(conn net.Conn, db *gorm.DB, arguments string) (string, authParams, error) {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {

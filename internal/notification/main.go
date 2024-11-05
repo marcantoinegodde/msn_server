@@ -1,18 +1,17 @@
 package notification
 
 import (
+	"fmt"
 	"log"
 	"msnserver/config"
 	"msnserver/internal/commands"
 	"net"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
-func StartNotificationServer() {
-	log.Println("Starting MSN notification server...")
-
-	config.LoadConfig()
-
+func StartNotificationServer(db *gorm.DB) {
 	ln, err := net.Listen("tcp", config.Config.NotificationServer.ServerAddr+":"+config.Config.NotificationServer.ServerPort)
 	if err != nil {
 		log.Fatalln("Error starting server:", err)
@@ -29,11 +28,11 @@ func StartNotificationServer() {
 			return
 		}
 		log.Println("Client connected:", conn.RemoteAddr())
-		go handleConnection(conn)
+		go handleConnection(conn, db)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, db *gorm.DB) {
 	defer func() {
 		if err := conn.Close(); err != nil {
 			log.Println("Error closing connection:", err)
@@ -69,11 +68,12 @@ func handleConnection(conn net.Conn) {
 				return
 			}
 		case "USR":
-			transactionID, _, err := commands.HandleReceiveUSR(conn, arguments)
+			transactionID, _, err := commands.HandleReceiveUSR(conn, db, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
+			fmt.Println(transactionID)
 		default:
 			log.Println("Unknown command:", command)
 			return
