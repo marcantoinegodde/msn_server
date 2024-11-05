@@ -3,7 +3,7 @@ package dispatch
 import (
 	"log"
 	"msnserver/config"
-	"msnserver/internal/commands"
+	"msnserver/pkg/commands"
 	"net"
 	"strings"
 

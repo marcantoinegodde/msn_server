@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 	"msnserver/config"
-	"msnserver/internal/database"
 	"msnserver/internal/dispatch"
+	"msnserver/pkg/database"
 )
 
 func main() {
