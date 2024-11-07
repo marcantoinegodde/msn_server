@@ -97,6 +97,13 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				return
 			}
 
+		case "CVR":
+			err := commands.HandleCVR(conn, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
 		default:
 			log.Println("Unknown command:", command)
 			return
