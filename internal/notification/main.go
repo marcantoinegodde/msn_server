@@ -1,7 +1,6 @@
 package notification
 
 import (
-	"fmt"
 	"log"
 	"msnserver/config"
 	"msnserver/pkg/commands"
@@ -68,12 +67,16 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				return
 			}
 		case "USR":
-			transactionID, _, err := commands.HandleReceiveUSR(conn, db, arguments)
+			transactionID, authParams, err := commands.HandleReceiveUSR(conn, db, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
-			fmt.Println(transactionID)
+			err = commands.HandleSendUSR(conn, db, transactionID, authParams)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
 		default:
 			log.Println("Unknown command:", command)
 			return

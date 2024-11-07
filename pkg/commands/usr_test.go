@@ -13,7 +13,7 @@ func TestHandleUSRDispatch(t *testing.T) {
 		expectedAuthParams    authParams
 		ok                    bool
 	}{
-		{"2 MD5 I example@passport.com", "2", authParams{authMethod: "MD5", authState: "I", username: "example@passport.com"}, true},
+		{"2 MD5 I example@passport.com", "2", authParams{authMethod: "MD5", authState: "I", email: "example@passport.com", password: ""}, true},
 		{"MD5 I example@passport.com", "", authParams{}, false},
 		{"2 MD5 I", "", authParams{}, false},
 		{"2 MD5 I example@passport.com foo", "", authParams{}, false},
@@ -40,8 +40,8 @@ func TestHandleUSRDispatch(t *testing.T) {
 			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotAuthParams.authState, tt.expectedAuthParams.authState)
 		}
 
-		if gotAuthParams.username != tt.expectedAuthParams.username {
-			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotAuthParams.username, tt.expectedAuthParams.username)
+		if gotAuthParams.email != tt.expectedAuthParams.email {
+			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotAuthParams.email, tt.expectedAuthParams.email)
 		}
 
 	}
