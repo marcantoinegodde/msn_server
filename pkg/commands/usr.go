@@ -59,7 +59,7 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, ap *AuthPar
 			var user database.User
 			query := db.First(&user, "email = ?", ap.email)
 			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-				SendError(conn, transactionID, ERR_AUTH_FAILED)
+				SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
 				return errors.New("User not found")
 			} else if query.Error != nil {
 				return query.Error
@@ -73,14 +73,14 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, ap *AuthPar
 			var user database.User
 			query := db.First(&user, "email = ?", ap.email)
 			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-				SendError(conn, transactionID, ERR_AUTH_FAILED)
+				SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
 				return errors.New("User not found")
 			} else if query.Error != nil {
 				return query.Error
 			}
 
 			if user.Password != ap.password {
-				SendError(conn, transactionID, ERR_AUTH_FAILED)
+				SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
 				return errors.New("Invalid password")
 			}
 
