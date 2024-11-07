@@ -48,6 +48,8 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			return
 		}
 
+		ap := &commands.AuthParams{}
+
 		data := string(buffer)
 		log.Println("<<<", data)
 
@@ -60,22 +62,27 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				log.Println("Error:", err)
 				return
 			}
+
 		case "INF":
 			err := commands.HandleINF(conn, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
+
 		case "USR":
-			transactionID, _, err := commands.HandleReceiveUSR(conn, db, arguments)
+			transactionID, err := commands.HandleReceiveUSR(conn, db, arguments, ap)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
+
 			commands.HandleXFR(conn, transactionID)
 			return
+
 		case "OUT":
 			commands.HandleOUT(conn)
+
 		default:
 			log.Println("Unknown command:", command)
 			return

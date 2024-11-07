@@ -12,42 +12,52 @@ import (
 	"gorm.io/gorm"
 )
 
-type authParams struct {
+type AuthParams struct {
 	authMethod string
 	authState  string
 	email      string
 	password   string
 }
 
-func HandleReceiveUSR(conn net.Conn, db *gorm.DB, arguments string) (string, authParams, error) {
+func HandleReceiveUSR(conn net.Conn, db *gorm.DB, arguments string, ap *AuthParams) (string, error) {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
-		return "", authParams{}, err
+		return "", err
 	}
 
 	splitArguments := strings.Split(arguments, " ")
 	if len(splitArguments) != 3 {
 		err := errors.New("Invalid transaction")
-		return "", authParams{}, err
+		return "", err
 	}
 
-	authParams := authParams{authMethod: splitArguments[0], authState: splitArguments[1], email: splitArguments[2]}
-
-	if !slices.Contains(supportedAuthMethods, authParams.authMethod) {
+	if !slices.Contains(supportedAuthMethods, splitArguments[0]) {
 		err := errors.New("Unsupported authentication method")
-		return "", authParams, err
+		return "", err
 	}
 
-	return transactionID, authParams, nil
+	ap.authMethod = splitArguments[0]
+	ap.authState = splitArguments[1]
+
+	if splitArguments[1] == "I" {
+		ap.email = splitArguments[2]
+	} else if splitArguments[1] == "S" {
+		ap.password = splitArguments[2]
+	} else {
+		err := errors.New("Invalid auth state")
+		return "", err
+	}
+
+	return transactionID, nil
 }
 
-func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, authParams authParams) error {
-	switch authParams.authMethod {
+func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, ap *AuthParams) error {
+	switch ap.authMethod {
 	case "MD5":
-		if authParams.authState == "I" {
+		if ap.authState == "I" {
 			var user database.User
-			query := db.First(&user, "email = ?", authParams.email)
+			query := db.First(&user, "email = ?", ap.email)
 			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 				SendError(conn, transactionID, ERR_AUTH_FAILED)
 				return errors.New("User not found")
@@ -55,11 +65,28 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, authParams 
 				return query.Error
 			}
 
-			res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, authParams.authMethod, "S", user.Salt)
+			res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, ap.authMethod, "S", user.Salt)
 			log.Println(">>>", res)
 			conn.Write([]byte(res))
 			return nil
-		} else if authParams.authState == "S" {
+		} else if ap.authState == "S" {
+			var user database.User
+			query := db.First(&user, "email = ?", ap.email)
+			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
+				SendError(conn, transactionID, ERR_AUTH_FAILED)
+				return errors.New("User not found")
+			} else if query.Error != nil {
+				return query.Error
+			}
+
+			if user.Password != ap.password {
+				SendError(conn, transactionID, ERR_AUTH_FAILED)
+				return errors.New("Invalid password")
+			}
+
+			res := fmt.Sprintf("USR %s %s %s %s %d\r\n", transactionID, "OK", user.Email, user.Name, boolToInt(user.Verified))
+			log.Println(">>>", res)
+			conn.Write([]byte(res))
 			return nil
 		} else {
 			err := errors.New("Invalid auth state")
@@ -70,4 +97,11 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, authParams 
 		err := errors.New("Unsupported authentication method")
 		return err
 	}
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }

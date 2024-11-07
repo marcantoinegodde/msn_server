@@ -10,19 +10,22 @@ func TestHandleUSRDispatch(t *testing.T) {
 	tests := []struct {
 		arguments             string
 		expectedTransactionID string
-		expectedAuthParams    authParams
+		expectedAuthParams    AuthParams
 		ok                    bool
 	}{
-		{"2 MD5 I example@passport.com", "2", authParams{authMethod: "MD5", authState: "I", email: "example@passport.com", password: ""}, true},
-		{"MD5 I example@passport.com", "", authParams{}, false},
-		{"2 MD5 I", "", authParams{}, false},
-		{"2 MD5 I example@passport.com foo", "", authParams{}, false},
+		{"2 MD5 I example@passport.com", "2", AuthParams{authMethod: "MD5", authState: "I", email: "example@passport.com", password: ""}, true},
+		{"MD5 I example@passport.com", "", AuthParams{}, false},
+		{"2 MD5 I", "", AuthParams{}, false},
+		{"2 MD5 I example@passport.com foo", "", AuthParams{}, false},
 	}
 
 	for _, tt := range tests {
 		mockConn := &mockConn{}
 		mockDB := &gorm.DB{}
-		gotTransactionID, gotAuthParams, gotErr := HandleReceiveUSR(mockConn, mockDB, tt.arguments)
+
+		ap := &AuthParams{}
+
+		gotTransactionID, gotErr := HandleReceiveUSR(mockConn, mockDB, tt.arguments, ap)
 
 		if (gotErr == nil) != tt.ok {
 			t.Errorf("Error HandleReceiveUSR(%q) = %v, want %v", tt.arguments, gotErr == nil, tt.ok)
@@ -32,17 +35,34 @@ func TestHandleUSRDispatch(t *testing.T) {
 			t.Errorf("TransactionID HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotTransactionID, tt.expectedTransactionID)
 		}
 
-		if gotAuthParams.authMethod != tt.expectedAuthParams.authMethod {
-			t.Errorf("AuthMethod HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotAuthParams.authMethod, tt.expectedAuthParams.authMethod)
+		if ap.authMethod != tt.expectedAuthParams.authMethod {
+			t.Errorf("AuthMethod HandleReceiveUSR(%q) = %q, want %q", tt.arguments, ap.authMethod, tt.expectedAuthParams.authMethod)
 		}
 
-		if gotAuthParams.authState != tt.expectedAuthParams.authState {
-			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotAuthParams.authState, tt.expectedAuthParams.authState)
+		if ap.authState != tt.expectedAuthParams.authState {
+			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, ap.authState, tt.expectedAuthParams.authState)
 		}
 
-		if gotAuthParams.email != tt.expectedAuthParams.email {
-			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotAuthParams.email, tt.expectedAuthParams.email)
+		if ap.email != tt.expectedAuthParams.email {
+			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, ap.email, tt.expectedAuthParams.email)
 		}
 
+	}
+}
+
+func TestBoolToInt(t *testing.T) {
+	tests := []struct {
+		input    bool
+		expected int
+	}{
+		{true, 1},
+		{false, 0},
+	}
+
+	for _, tt := range tests {
+		got := boolToInt(tt.input)
+		if got != tt.expected {
+			t.Errorf("boolToInt(%v) = %d, want %d", tt.input, got, tt.expected)
+		}
 	}
 }

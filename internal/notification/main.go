@@ -40,6 +40,8 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 		}
 	}()
 
+	ap := &commands.AuthParams{}
+
 	for {
 		buffer := make([]byte, 1024)
 		_, err := conn.Read(buffer)
@@ -60,23 +62,27 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				log.Println("Error:", err)
 				return
 			}
+
 		case "INF":
 			err := commands.HandleINF(conn, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
+
 		case "USR":
-			transactionID, authParams, err := commands.HandleReceiveUSR(conn, db, arguments)
+			tid, err := commands.HandleReceiveUSR(conn, db, arguments, ap)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
-			err = commands.HandleSendUSR(conn, db, transactionID, authParams)
+
+			err = commands.HandleSendUSR(conn, db, tid, ap)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
+
 		default:
 			log.Println("Unknown command:", command)
 			return
