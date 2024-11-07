@@ -29,12 +29,12 @@ func HandleReceiveUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, arguments stri
 
 	splitArguments := strings.Split(arguments, " ")
 	if len(splitArguments) != 3 {
-		err := errors.New("Invalid transaction")
+		err := errors.New("invalid transaction")
 		return "", err
 	}
 
 	if !slices.Contains(supportedAuthMethods, splitArguments[0]) {
-		err := errors.New("Unsupported authentication method")
+		err := errors.New("unsupported authentication method")
 		return "", err
 	}
 
@@ -46,7 +46,7 @@ func HandleReceiveUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, arguments stri
 	} else if splitArguments[1] == "S" {
 		ap.password = splitArguments[2]
 	} else {
-		err := errors.New("Invalid auth state")
+		err := errors.New("invalid auth state")
 		return "", err
 	}
 
@@ -61,7 +61,7 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, transactionID str
 			query := db.First(&user, "email = ?", ap.email)
 			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 				SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
-				return errors.New("User not found")
+				return errors.New("user not found")
 			} else if query.Error != nil {
 				return query.Error
 			}
@@ -75,14 +75,14 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, transactionID str
 			query := db.First(&user, "email = ?", ap.email)
 			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 				SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
-				return errors.New("User not found")
+				return errors.New("user not found")
 			} else if query.Error != nil {
 				return query.Error
 			}
 
 			if user.Password != ap.password {
 				SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
-				return errors.New("Invalid password")
+				return errors.New("invalid password")
 			}
 
 			ap.connected = true
@@ -92,12 +92,12 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, transactionID str
 			conn.Write([]byte(res))
 			return nil
 		} else {
-			err := errors.New("Invalid auth state")
+			err := errors.New("invalid auth state")
 			return err
 		}
 
 	default:
-		err := errors.New("Unsupported authentication method")
+		err := errors.New("unsupported authentication method")
 		return err
 	}
 }

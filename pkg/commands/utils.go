@@ -12,14 +12,14 @@ func parseTransactionID(arguments string) (string, string, error) {
 
 	parsedTransactionID, err := strconv.Atoi(transactionID)
 	if err != nil {
-		return "", "", errors.New("Invalid transaction ID")
+		return "", "", errors.New("invalid transaction ID")
 	}
 
 	if parsedTransactionID < 0 {
-		return "", "", errors.New("Invalid transaction ID")
+		return "", "", errors.New("invalid transaction ID")
 	}
 	if parsedTransactionID > (int(math.Pow(2, 32)) - 1) {
-		return "", "", errors.New("Invalid transaction ID")
+		return "", "", errors.New("invalid transaction ID")
 	}
 
 	return transactionID, arguments, nil

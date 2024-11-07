@@ -31,7 +31,7 @@ func HandleVER(conn net.Conn, arguments string) error {
 		res := fmt.Sprintf("VER %s %s\r\n", transactionID, "0")
 		log.Println(">>>", res)
 		conn.Write([]byte(res))
-		return errors.New("Protocol mismatch")
+		return errors.New("protocol mismatch")
 	}
 
 	res := fmt.Sprintf("VER %s %s\r\n", transactionID, strings.Join(serverProtocols, " "))
