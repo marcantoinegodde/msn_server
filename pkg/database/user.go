@@ -10,4 +10,5 @@ type User struct {
 	Password string
 	Name     string
 	Verified bool `gorm:"default:true"`
+	Status   string
 }

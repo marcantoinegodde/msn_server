@@ -71,7 +71,7 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			}
 
 		case "USR":
-			transactionID, err := commands.HandleReceiveUSR(conn, db, arguments, ap)
+			transactionID, err := commands.HandleReceiveUSR(conn, db, ap, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return

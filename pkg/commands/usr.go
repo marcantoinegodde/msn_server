@@ -17,9 +17,10 @@ type AuthParams struct {
 	authState  string
 	email      string
 	password   string
+	connected  bool
 }
 
-func HandleReceiveUSR(conn net.Conn, db *gorm.DB, arguments string, ap *AuthParams) (string, error) {
+func HandleReceiveUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, arguments string) (string, error) {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
@@ -52,7 +53,7 @@ func HandleReceiveUSR(conn net.Conn, db *gorm.DB, arguments string, ap *AuthPara
 	return transactionID, nil
 }
 
-func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, ap *AuthParams) error {
+func HandleSendUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, transactionID string) error {
 	switch ap.authMethod {
 	case "MD5":
 		if ap.authState == "I" {
@@ -83,6 +84,8 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, transactionID string, ap *AuthPar
 				SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
 				return errors.New("Invalid password")
 			}
+
+			ap.connected = true
 
 			res := fmt.Sprintf("USR %s %s %s %s %d\r\n", transactionID, "OK", user.Email, user.Name, boolToInt(user.Verified))
 			log.Println(">>>", res)

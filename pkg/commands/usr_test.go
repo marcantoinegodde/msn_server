@@ -25,7 +25,7 @@ func TestHandleUSRDispatch(t *testing.T) {
 
 		ap := &AuthParams{}
 
-		gotTransactionID, gotErr := HandleReceiveUSR(mockConn, mockDB, tt.arguments, ap)
+		gotTransactionID, gotErr := HandleReceiveUSR(mockConn, mockDB, ap, tt.arguments)
 
 		if (gotErr == nil) != tt.ok {
 			t.Errorf("Error HandleReceiveUSR(%q) = %v, want %v", tt.arguments, gotErr == nil, tt.ok)

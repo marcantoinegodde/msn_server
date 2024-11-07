@@ -71,13 +71,13 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			}
 
 		case "USR":
-			tid, err := commands.HandleReceiveUSR(conn, db, arguments, ap)
+			tid, err := commands.HandleReceiveUSR(conn, db, ap, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
-			err = commands.HandleSendUSR(conn, db, tid, ap)
+			err = commands.HandleSendUSR(conn, db, ap, tid)
 			if err != nil {
 				log.Println("Error:", err)
 				return
@@ -85,6 +85,13 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 
 		case "SYN":
 			err := commands.HandleSYN(conn, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
+		case "CHG":
+			err := commands.HandleCHG(conn, db, ap, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
