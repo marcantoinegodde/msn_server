@@ -83,6 +83,13 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				return
 			}
 
+		case "SYN":
+			err := commands.HandleSYN(conn, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
 		default:
 			log.Println("Unknown command:", command)
 			return
