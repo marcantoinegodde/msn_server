@@ -9,6 +9,5 @@ type User struct {
 	Salt     string
 	Password string
 	Name     string
-	Verified bool `gorm:"default:true"`
 	Status   string
 }

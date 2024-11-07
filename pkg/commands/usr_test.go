@@ -49,20 +49,3 @@ func TestHandleUSRDispatch(t *testing.T) {
 
 	}
 }
-
-func TestBoolToInt(t *testing.T) {
-	tests := []struct {
-		input    bool
-		expected int
-	}{
-		{true, 1},
-		{false, 0},
-	}
-
-	for _, tt := range tests {
-		got := boolToInt(tt.input)
-		if got != tt.expected {
-			t.Errorf("boolToInt(%v) = %d, want %d", tt.input, got, tt.expected)
-		}
-	}
-}

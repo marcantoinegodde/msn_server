@@ -87,7 +87,7 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, transactionID str
 
 			ap.connected = true
 
-			res := fmt.Sprintf("USR %s %s %s %s %d\r\n", transactionID, "OK", user.Email, user.Name, boolToInt(user.Verified))
+			res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, "OK", user.Email, user.Name)
 			log.Println(">>>", res)
 			conn.Write([]byte(res))
 			return nil
@@ -100,11 +100,4 @@ func HandleSendUSR(conn net.Conn, db *gorm.DB, ap *AuthParams, transactionID str
 		err := errors.New("unsupported authentication method")
 		return err
 	}
-}
-
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
 }
