@@ -53,7 +53,10 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 		data := string(buffer)
 		log.Println("<<<", data)
 
-		command, arguments, _ := strings.Cut(data, " ")
+		command, arguments, found := strings.Cut(data, " ")
+		if !found {
+			command, _, _ = strings.Cut(data, "\r\n")
+		}
 
 		switch command {
 		case "VER":
@@ -103,6 +106,10 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				log.Println("Error:", err)
 				return
 			}
+
+		case "OUT":
+			commands.HandleOUT(conn)
+			return
 
 		default:
 			log.Println("Unknown command:", command)
