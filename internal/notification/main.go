@@ -107,6 +107,13 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				return
 			}
 
+		case "GTC":
+			err := commands.HandleGTC(conn, db, ap, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
 		case "OUT":
 			commands.HandleOUT(conn)
 			return
