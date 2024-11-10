@@ -34,7 +34,6 @@ func HandleCHG(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 	var user database.User
 	query := db.First(&user, "email = ?", ap.email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		SendError(conn, transactionID, ERR_AUTHENTICATION_FAILED)
 		return errors.New("user not found")
 	} else if query.Error != nil {
 		return query.Error
