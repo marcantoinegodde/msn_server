@@ -14,6 +14,9 @@ import (
 )
 
 func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
+	// TODO: Add asynchronous communication reverse list
+	// TODO: Add group number to forward list
+
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -164,6 +167,11 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 	}
 	log.Println(">>>", res)
 	conn.Write([]byte(res))
+
+	if listName == "FL" {
+		HandleSendILN(conn, transactionID, principal.Status, principal.Email, principal.Name)
+	}
+
 	return nil
 }
 
