@@ -7,7 +7,6 @@ import (
 	"msnserver/pkg/database"
 	"net"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -55,7 +54,7 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 	}
 
 	var user database.User
-	query := db.First(&user, "email = ?", ap.email)
+	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&user, "email = ?", ap.email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -63,7 +62,7 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 	}
 
 	var principal database.User
-	query = db.First(&principal, "email = ?", email)
+	query = db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&principal, "email = ?", email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		SendError(conn, transactionID, ERR_INVALID_USER)
 		log.Printf("Error: user not found: %s\n", email)
@@ -80,7 +79,7 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 			return nil
 		}
 
-		if slices.Contains(user.ForwardList, &principal) {
+		if isMember(user.ForwardList, &principal) {
 			SendError(conn, transactionID, ERR_ALREADY_THERE)
 			log.Printf("Error: user already in forward list\n")
 			return nil
@@ -88,9 +87,14 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 
 		user.ForwardList = append(user.ForwardList, &principal)
 		user.DataVersion++
-		query = db.Save(&user)
-		if query.Error != nil {
-			return query.Error
+		if err := db.Save(&user).Error; err != nil {
+			return err
+		}
+
+		principal.ReverseList = append(principal.ReverseList, &user)
+		principal.DataVersion++
+		if err := db.Save(&principal).Error; err != nil {
+			return err
 		}
 
 	case "AL":
@@ -100,13 +104,13 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 			return nil
 		}
 
-		if slices.Contains(user.AllowList, &principal) {
+		if isMember(user.AllowList, &principal) {
 			SendError(conn, transactionID, ERR_ALREADY_THERE)
 			log.Printf("Error: user already in allow list\n")
 			return nil
 		}
 
-		if slices.Contains(user.BlockList, &principal) {
+		if isMember(user.BlockList, &principal) {
 			SendError(conn, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Printf("Error: trying to add in AL and BL\n")
 			return nil
@@ -114,9 +118,8 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 
 		user.AllowList = append(user.AllowList, &principal)
 		user.DataVersion++
-		query = db.Save(&user)
-		if query.Error != nil {
-			return query.Error
+		if err := db.Save(&user).Error; err != nil {
+			return err
 		}
 
 	case "BL":
@@ -126,13 +129,13 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 			return nil
 		}
 
-		if slices.Contains(user.BlockList, &principal) {
+		if isMember(user.BlockList, &principal) {
 			SendError(conn, transactionID, ERR_ALREADY_THERE)
 			log.Printf("Error: user already in block list\n")
 			return nil
 		}
 
-		if slices.Contains(user.AllowList, &principal) {
+		if isMember(user.AllowList, &principal) {
 			SendError(conn, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Printf("Error: trying to add in AL and BL\n")
 			return nil
@@ -140,9 +143,8 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 
 		user.BlockList = append(user.BlockList, &principal)
 		user.DataVersion++
-		query = db.Save(&user)
-		if query.Error != nil {
-			return query.Error
+		if err := db.Save(&user).Error; err != nil {
+			return err
 		}
 
 	case "RL":
@@ -169,4 +171,14 @@ func isValidEmail(email string) bool {
 	const emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	re := regexp.MustCompile(emailRegex)
 	return re.MatchString(email)
+}
+
+func isMember(userList []*database.User, principal *database.User) bool {
+	for _, u := range userList {
+		if u.Email == principal.Email {
+			return true
+		}
+	}
+
+	return false
 }
