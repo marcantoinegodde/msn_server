@@ -21,16 +21,21 @@ func HandleGTC(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 		return err
 	}
 
+	if !slices.Contains(gtcMode, args) {
+		return errors.New("invalid mode")
+	}
+
+	if !s.connected {
+		SendError(conn, transactionID, ERR_NOT_LOGGED_IN)
+		return errors.New("not logged in")
+	}
+
 	var user database.User
 	query := db.First(&user, "email = ?", s.email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
 		return query.Error
-	}
-
-	if !slices.Contains(gtcMode, args) {
-		return errors.New("invalid mode")
 	}
 
 	if user.Gtc == args {
@@ -45,8 +50,12 @@ func HandleGTC(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 		return query.Error
 	}
 
-	res := fmt.Sprintf("GTC %s %d %s\r\n", transactionID, user.DataVersion, user.Gtc)
+	HandleSendGTC(conn, transactionID, user.DataVersion, user.Gtc)
+	return nil
+}
+
+func HandleSendGTC(conn net.Conn, tid string, version uint32, gtc string) {
+	res := fmt.Sprintf("GTC %s %d %s\r\n", tid, version, gtc)
 	log.Println(">>>", res)
 	conn.Write([]byte(res))
-	return nil
 }

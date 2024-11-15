@@ -21,16 +21,21 @@ func HandleBLP(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 		return err
 	}
 
+	if !slices.Contains(blpMode, args) {
+		return errors.New("invalid mode")
+	}
+
+	if !s.connected {
+		SendError(conn, transactionID, ERR_NOT_LOGGED_IN)
+		return errors.New("not logged in")
+	}
+
 	var user database.User
 	query := db.First(&user, "email = ?", s.email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
 		return query.Error
-	}
-
-	if !slices.Contains(blpMode, args) {
-		return errors.New("invalid mode")
 	}
 
 	if user.Blp == args {
@@ -45,8 +50,12 @@ func HandleBLP(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 		return query.Error
 	}
 
-	res := fmt.Sprintf("BLP %s %d %s\r\n", transactionID, user.DataVersion, user.Blp)
+	HandleSendBLP(conn, transactionID, user.DataVersion, user.Blp)
+	return nil
+}
+
+func HandleSendBLP(conn net.Conn, tid string, version uint32, blp string) {
+	res := fmt.Sprintf("BLP %s %d %s\r\n", tid, version, blp)
 	log.Println(">>>", res)
 	conn.Write([]byte(res))
-	return nil
 }
