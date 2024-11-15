@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
+func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	// TODO: Add asynchronous communication reverse list
 	// TODO: Add group number to forward list
 
@@ -39,7 +39,7 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 		}
 	}
 
-	if !ap.connected {
+	if !s.connected {
 		SendError(conn, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
@@ -50,14 +50,14 @@ func HandleADD(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 		return nil
 	}
 
-	if ap.email == email {
+	if s.email == email {
 		SendError(conn, transactionID, ERR_INVALID_USER)
 		log.Printf("Error: tried to add self to list\n")
 		return nil
 	}
 
 	var user database.User
-	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&user, "email = ?", ap.email)
+	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&user, "email = ?", s.email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {

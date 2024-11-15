@@ -40,7 +40,7 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 		}
 	}()
 
-	ap := &commands.AuthParams{}
+	s := &commands.Session{}
 
 	for {
 		buffer := make([]byte, 1024)
@@ -74,27 +74,27 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			}
 
 		case "USR":
-			tid, err := commands.HandleReceiveUSR(conn, db, ap, arguments)
+			tid, err := commands.HandleReceiveUSR(conn, db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
-			err = commands.HandleSendUSR(conn, db, ap, tid)
+			err = commands.HandleSendUSR(conn, db, s, tid)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "SYN":
-			err := commands.HandleSYN(conn, arguments)
+			err := commands.HandleSYN(conn, db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "CHG":
-			err := commands.HandleCHG(conn, db, ap, arguments)
+			err := commands.HandleCHG(conn, db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
@@ -108,21 +108,21 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			}
 
 		case "GTC":
-			err := commands.HandleGTC(conn, db, ap, arguments)
+			err := commands.HandleGTC(conn, db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "BLP":
-			err := commands.HandleBLP(conn, db, ap, arguments)
+			err := commands.HandleBLP(conn, db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "ADD":
-			err := commands.HandleADD(conn, db, ap, arguments)
+			err := commands.HandleADD(conn, db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return

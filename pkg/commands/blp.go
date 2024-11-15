@@ -14,7 +14,7 @@ import (
 
 var blpMode = []string{"AL", "BL"}
 
-func HandleBLP(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
+func HandleBLP(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -22,7 +22,7 @@ func HandleBLP(conn net.Conn, db *gorm.DB, ap *AuthParams, args string) error {
 	}
 
 	var user database.User
-	query := db.First(&user, "email = ?", ap.email)
+	query := db.First(&user, "email = ?", s.email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {

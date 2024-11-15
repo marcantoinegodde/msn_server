@@ -10,22 +10,22 @@ func TestHandleUSRDispatch(t *testing.T) {
 	tests := []struct {
 		arguments             string
 		expectedTransactionID string
-		expectedAuthParams    AuthParams
+		expectedSession       Session
 		ok                    bool
 	}{
-		{"2 MD5 I example@passport.com", "2", AuthParams{authMethod: "MD5", authState: "I", email: "example@passport.com", password: ""}, true},
-		{"MD5 I example@passport.com", "", AuthParams{}, false},
-		{"2 MD5 I", "", AuthParams{}, false},
-		{"2 MD5 I example@passport.com foo", "", AuthParams{}, false},
+		{"2 MD5 I example@passport.com", "2", Session{authMethod: "MD5", authState: "I", email: "example@passport.com", password: ""}, true},
+		{"MD5 I example@passport.com", "", Session{}, false},
+		{"2 MD5 I", "", Session{}, false},
+		{"2 MD5 I example@passport.com foo", "", Session{}, false},
 	}
 
 	for _, tt := range tests {
 		mockConn := &mockConn{}
 		mockDB := &gorm.DB{}
 
-		ap := &AuthParams{}
+		s := &Session{}
 
-		gotTransactionID, gotErr := HandleReceiveUSR(mockConn, mockDB, ap, tt.arguments)
+		gotTransactionID, gotErr := HandleReceiveUSR(mockConn, mockDB, s, tt.arguments)
 
 		if (gotErr == nil) != tt.ok {
 			t.Errorf("Error HandleReceiveUSR(%q) = %v, want %v", tt.arguments, gotErr == nil, tt.ok)
@@ -35,16 +35,16 @@ func TestHandleUSRDispatch(t *testing.T) {
 			t.Errorf("TransactionID HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotTransactionID, tt.expectedTransactionID)
 		}
 
-		if ap.authMethod != tt.expectedAuthParams.authMethod {
-			t.Errorf("AuthMethod HandleReceiveUSR(%q) = %q, want %q", tt.arguments, ap.authMethod, tt.expectedAuthParams.authMethod)
+		if s.authMethod != tt.expectedSession.authMethod {
+			t.Errorf("AuthMethod HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.authMethod, tt.expectedSession.authMethod)
 		}
 
-		if ap.authState != tt.expectedAuthParams.authState {
-			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, ap.authState, tt.expectedAuthParams.authState)
+		if s.authState != tt.expectedSession.authState {
+			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.authState, tt.expectedSession.authState)
 		}
 
-		if ap.email != tt.expectedAuthParams.email {
-			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, ap.email, tt.expectedAuthParams.email)
+		if s.email != tt.expectedSession.email {
+			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.email, tt.expectedSession.email)
 		}
 
 	}
