@@ -128,6 +128,13 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 				return
 			}
 
+		case "REA":
+			err := commands.HandleREA(conn, db, s, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
 		case "OUT":
 			commands.HandleOUT(conn)
 			return
