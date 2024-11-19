@@ -10,12 +10,16 @@ import (
 func main() {
 	log.Println("Starting MSN dispatch server...")
 
-	config.LoadConfig()
+	c, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalln("Error loading config:", err)
+	}
 
-	db, err := database.Load()
+	db, err := database.Load(c.Database)
 	if err != nil {
 		log.Fatalln("Error loading database:", err)
 	}
 
-	dispatch.StartDispatchServer(db)
+	ds := dispatch.NewDispatchServer(db, c)
+	ds.Start()
 }

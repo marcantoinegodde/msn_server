@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/spf13/viper"
 )
@@ -34,21 +33,21 @@ type NotificationServer struct {
 	ServerPort string `mapstructure:"server_port"`
 }
 
-var Config MSNServerConfiguration
+func LoadConfig() (*MSNServerConfiguration, error) {
+	var config MSNServerConfiguration
 
-func LoadConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("/etc/msnserver/")
 	viper.AddConfigPath(".")
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalln(fmt.Errorf("fatal error config file: %w", err))
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("fatal error reading config file: %w", err)
 	}
 
-	err = viper.Unmarshal(&Config)
-	if err != nil {
-		log.Fatalln(fmt.Errorf("fatal error unmarshal config: %w", err))
+	if err := viper.Unmarshal(&config); err != nil {
+		return nil, fmt.Errorf("fatal error unmarshal config: %w", err)
 	}
+
+	return &config, nil
 }

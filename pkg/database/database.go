@@ -9,9 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func Load() (*gorm.DB, error) {
+func Load(c config.Database) (*gorm.DB, error) {
 	log.Println("Connecting to database...")
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Europe/Paris", config.Config.Database.Host, config.Config.Database.User, config.Config.Database.Password, config.Config.Database.DBName, config.Config.Database.Port, config.Config.Database.SSLMode)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Europe/Paris", c.Host, c.User, c.Password, c.DBName, c.Port, c.SSLMode)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

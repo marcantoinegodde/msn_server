@@ -10,15 +10,27 @@ import (
 	"gorm.io/gorm"
 )
 
-func StartNotificationServer(db *gorm.DB) {
-	ln, err := net.Listen("tcp", config.Config.NotificationServer.ServerAddr+":"+config.Config.NotificationServer.ServerPort)
+type NotificationServer struct {
+	db     *gorm.DB
+	config *config.MSNServerConfiguration
+}
+
+func NewNotificationServer(db *gorm.DB, c *config.MSNServerConfiguration) *NotificationServer {
+	return &NotificationServer{
+		db:     db,
+		config: c,
+	}
+}
+
+func (ns *NotificationServer) Start() {
+	ln, err := net.Listen("tcp", ns.config.NotificationServer.ServerAddr+":"+ns.config.NotificationServer.ServerPort)
 	if err != nil {
 		log.Fatalln("Error starting server:", err)
 	}
 
 	defer ln.Close()
 
-	log.Println("Listening on:", config.Config.NotificationServer.ServerAddr+":"+config.Config.NotificationServer.ServerPort)
+	log.Println("Listening on:", ns.config.NotificationServer.ServerAddr+":"+ns.config.NotificationServer.ServerPort)
 
 	for {
 		conn, err := ln.Accept()
@@ -27,11 +39,11 @@ func StartNotificationServer(db *gorm.DB) {
 			return
 		}
 		log.Println("Client connected:", conn.RemoteAddr())
-		go handleConnection(conn, db)
+		go ns.handleConnection(conn)
 	}
 }
 
-func handleConnection(conn net.Conn, db *gorm.DB) {
+func (ns *NotificationServer) handleConnection(conn net.Conn) {
 	defer func() {
 		if err := conn.Close(); err != nil {
 			log.Println("Error closing connection:", err)
@@ -74,27 +86,27 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			}
 
 		case "USR":
-			tid, err := commands.HandleReceiveUSR(conn, db, s, arguments)
+			tid, err := commands.HandleReceiveUSR(conn, ns.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
-			err = commands.HandleSendUSR(conn, db, s, tid)
+			err = commands.HandleSendUSR(conn, ns.db, s, tid)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "SYN":
-			err := commands.HandleSYN(conn, db, s, arguments)
+			err := commands.HandleSYN(conn, ns.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "CHG":
-			err := commands.HandleCHG(conn, db, s, arguments)
+			err := commands.HandleCHG(conn, ns.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
@@ -108,28 +120,28 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			}
 
 		case "GTC":
-			err := commands.HandleGTC(conn, db, s, arguments)
+			err := commands.HandleGTC(conn, ns.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "BLP":
-			err := commands.HandleBLP(conn, db, s, arguments)
+			err := commands.HandleBLP(conn, ns.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "ADD":
-			err := commands.HandleADD(conn, db, s, arguments)
+			err := commands.HandleADD(conn, ns.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "REA":
-			err := commands.HandleREA(conn, db, s, arguments)
+			err := commands.HandleREA(conn, ns.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return

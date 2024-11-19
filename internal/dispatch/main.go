@@ -10,15 +10,27 @@ import (
 	"gorm.io/gorm"
 )
 
-func StartDispatchServer(db *gorm.DB) {
-	ln, err := net.Listen("tcp", config.Config.DispatchServer.ServerAddr+":"+config.Config.DispatchServer.ServerPort)
+type DispatchServer struct {
+	db     *gorm.DB
+	config *config.MSNServerConfiguration
+}
+
+func NewDispatchServer(db *gorm.DB, c *config.MSNServerConfiguration) *DispatchServer {
+	return &DispatchServer{
+		db:     db,
+		config: c,
+	}
+}
+
+func (ds *DispatchServer) Start() {
+	ln, err := net.Listen("tcp", ds.config.DispatchServer.ServerAddr+":"+ds.config.DispatchServer.ServerPort)
 	if err != nil {
 		log.Fatalln("Error starting server:", err)
 	}
 
 	defer ln.Close()
 
-	log.Println("Listening on:", config.Config.DispatchServer.ServerAddr+":"+config.Config.DispatchServer.ServerPort)
+	log.Println("Listening on:", ds.config.DispatchServer.ServerAddr+":"+ds.config.DispatchServer.ServerPort)
 
 	for {
 		conn, err := ln.Accept()
@@ -27,11 +39,11 @@ func StartDispatchServer(db *gorm.DB) {
 			return
 		}
 		log.Println("Client connected:", conn.RemoteAddr())
-		go handleConnection(conn, db)
+		go ds.handleConnection(conn)
 	}
 }
 
-func handleConnection(conn net.Conn, db *gorm.DB) {
+func (ds *DispatchServer) handleConnection(conn net.Conn) {
 	defer func() {
 		if err := conn.Close(); err != nil {
 			log.Println("Error closing connection:", err)
@@ -74,13 +86,13 @@ func handleConnection(conn net.Conn, db *gorm.DB) {
 			}
 
 		case "USR":
-			transactionID, err := commands.HandleReceiveUSR(conn, db, s, arguments)
+			transactionID, err := commands.HandleReceiveUSR(conn, ds.db, s, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
-			commands.HandleXFR(conn, transactionID)
+			commands.HandleXFR(conn, ds.config.DispatchServer, transactionID)
 			return
 
 		case "OUT":

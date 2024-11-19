@@ -10,12 +10,16 @@ import (
 func main() {
 	log.Println("Starting MSN notification server...")
 
-	config.LoadConfig()
+	c, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalln("Error loading config:", err)
+	}
 
-	db, err := database.Load()
+	db, err := database.Load(c.Database)
 	if err != nil {
 		log.Fatalln("Error loading database:", err)
 	}
 
-	notification.StartNotificationServer(db)
+	ns := notification.NewNotificationServer(db, c)
+	ns.Start()
 }
