@@ -41,7 +41,7 @@ func (ns *NotificationServer) Start() {
 		conn, err := ln.Accept()
 		if err != nil {
 			log.Println("Error accepting connection:", err)
-			return
+			continue
 		}
 		log.Println("Client connected:", conn.RemoteAddr())
 		go ns.handleConnection(conn)
