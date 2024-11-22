@@ -49,23 +49,20 @@ func (ns *NotificationServer) Start() {
 }
 
 func (ns *NotificationServer) handleConnection(conn net.Conn) {
-	defer func() {
-		ns.m.Lock()
-		delete(ns.clients, conn.RemoteAddr().String())
-		ns.m.Unlock()
-
-		if err := conn.Close(); err != nil {
-			log.Println("Error closing connection:", err)
-		} else {
-			log.Println("Client disconnected:", conn.RemoteAddr())
-		}
-	}()
-
 	c := &Client{
 		id:       conn.RemoteAddr().String(),
 		conn:     conn,
 		sendChan: make(chan string),
 	}
+
+	defer func() {
+		ns.m.Lock()
+		delete(ns.clients, c.id)
+		ns.m.Unlock()
+
+		conn.Close()
+		log.Println("Client disconnected:", conn.RemoteAddr())
+	}()
 
 	ns.m.Lock()
 	ns.clients[c.id] = c
@@ -79,94 +76,92 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 		buffer := make([]byte, 1024)
 		_, err := conn.Read(buffer)
 		if err != nil {
-			log.Println("Error:", err)
 			return
 		}
 
-		data := string(buffer)
-		log.Println("<<<", data)
-
-		command, arguments, found := strings.Cut(data, " ")
-		if !found {
-			command, _, _ = strings.Cut(data, "\r\n")
-		}
-
-		// TO FIX: Terrible code to be rewritten, async goroutine can't close the connection
 		go func() {
+			data := string(buffer)
+			log.Println("<<<", data)
+
+			command, arguments, found := strings.Cut(data, " ")
+			if !found {
+				command, _, _ = strings.Cut(data, "\r\n")
+			}
+
 			switch command {
 			case "VER":
 				if err := commands.HandleVER(c.sendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "INF":
 				if err := commands.HandleINF(c.sendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "USR":
 				tid, err := commands.HandleReceiveUSR(s, arguments)
 				if err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 				if err := commands.HandleSendUSR(c.sendChan, ns.db, s, tid); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "SYN":
 				if err := commands.HandleSYN(c.sendChan, ns.db, s, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "CHG":
 				if err := commands.HandleCHG(c.sendChan, ns.db, s, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "CVR":
 				if err := commands.HandleCVR(c.sendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "GTC":
 				if err := commands.HandleGTC(c.sendChan, ns.db, s, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "BLP":
 				if err := commands.HandleBLP(c.sendChan, ns.db, s, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "ADD":
 				if err := commands.HandleADD(c.sendChan, ns.db, s, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "REA":
 				if err := commands.HandleREA(c.sendChan, ns.db, s, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "OUT":
 				commands.HandleOUT(c.sendChan)
-				return
+				close(c.sendChan)
 
 			default:
 				log.Println("Unknown command:", command)
-				return
+				close(c.sendChan)
 			}
 		}()
 	}

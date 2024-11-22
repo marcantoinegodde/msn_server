@@ -49,80 +49,75 @@ func (ds *DispatchServer) Start() {
 }
 
 func (ds *DispatchServer) handleConnection(conn net.Conn) {
+	c := &Client{
+		id:       conn.RemoteAddr().String(),
+		conn:     conn,
+		sendChan: make(chan string),
+	}
+
 	defer func() {
 		ds.m.Lock()
-		delete(ds.clients, conn.RemoteAddr().String())
+		delete(ds.clients, c.id)
 		ds.m.Unlock()
 
-		if err := conn.Close(); err != nil {
-			log.Println("Error closing connection:", err)
-		} else {
-			log.Println("Client disconnected:", conn.RemoteAddr())
-		}
+		conn.Close()
+		log.Println("Client disconnected:", conn.RemoteAddr())
 	}()
+
+	ds.m.Lock()
+	ds.clients[c.id] = c
+	ds.m.Unlock()
+
+	go c.sendHandler()
+
+	s := &commands.Session{}
 
 	for {
 		buffer := make([]byte, 1024)
 		_, err := conn.Read(buffer)
 		if err != nil {
-			log.Println("Error:", err)
 			return
 		}
 
-		c := &Client{
-			id:       conn.RemoteAddr().String(),
-			conn:     conn,
-			sendChan: make(chan string),
-		}
-
-		ds.m.Lock()
-		ds.clients[c.id] = c
-		ds.m.Unlock()
-
-		go c.sendHandler()
-
-		s := &commands.Session{}
-
-		data := string(buffer)
-		log.Println("<<<", data)
-
-		command, arguments, found := strings.Cut(data, " ")
-		if !found {
-			command, _, _ = strings.Cut(data, "\r\n")
-		}
-
-		// TO FIX: Terrible code to be rewritten, async goroutine can't close the connection
 		go func() {
+			data := string(buffer)
+			log.Println("<<<", data)
+
+			command, arguments, found := strings.Cut(data, " ")
+			if !found {
+				command, _, _ = strings.Cut(data, "\r\n")
+			}
+
 			switch command {
 			case "VER":
 				if err := commands.HandleVER(c.sendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "INF":
 				if err := commands.HandleINF(c.sendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
 			case "USR":
-				transactionID, err := commands.HandleReceiveUSR(s, arguments)
+				tid, err := commands.HandleReceiveUSR(s, arguments)
 				if err != nil {
 					log.Println("Error:", err)
-					return
+					close(c.sendChan)
 				}
 
-				commands.HandleXFR(c.sendChan, ds.config.DispatchServer, transactionID)
-				return
+				commands.HandleXFR(c.sendChan, ds.config.DispatchServer, tid)
+				close(c.sendChan)
 
 			case "OUT":
 				commands.HandleOUT(c.sendChan)
-				return
+				close(c.sendChan)
 
 			default:
 				log.Println("Unknown command:", command)
-				return
+				close(c.sendChan)
 			}
 		}()
 	}
