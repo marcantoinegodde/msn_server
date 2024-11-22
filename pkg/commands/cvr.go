@@ -2,8 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"log"
-	"net"
 	"strings"
 )
 
@@ -14,7 +12,7 @@ const (
 	infoURL            = "http://messenger.hotmail.com"
 )
 
-func HandleCVR(conn net.Conn, args string) error {
+func HandleCVR(c chan string, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -22,7 +20,6 @@ func HandleCVR(conn net.Conn, args string) error {
 	}
 
 	res := fmt.Sprintf("CVR %s %s %s %s %s %s\r\n", transactionID, recommendedVersion, recommendedVersion, minimumVersion, downloadURL, infoURL)
-	log.Println(">>>", res)
-	conn.Write([]byte(res))
+	c <- res
 	return nil
 }

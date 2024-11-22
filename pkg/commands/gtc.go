@@ -3,9 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"log"
 	"msnserver/pkg/database"
-	"net"
 	"slices"
 	"strings"
 
@@ -14,7 +12,7 @@ import (
 
 var gtcMode = []string{"A", "N"}
 
-func HandleGTC(conn net.Conn, db *gorm.DB, s *Session, args string) error {
+func HandleGTC(c chan string, db *gorm.DB, s *Session, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -26,7 +24,7 @@ func HandleGTC(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	}
 
 	if !s.connected {
-		SendError(conn, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -39,7 +37,7 @@ func HandleGTC(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	}
 
 	if user.Gtc == args {
-		SendError(conn, transactionID, ERR_ALREADY_IN_THE_MODE)
+		SendError(c, transactionID, ERR_ALREADY_IN_THE_MODE)
 		return errors.New("user already in requested mode")
 	}
 
@@ -50,12 +48,11 @@ func HandleGTC(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 		return query.Error
 	}
 
-	HandleSendGTC(conn, transactionID, user.DataVersion, user.Gtc)
+	HandleSendGTC(c, transactionID, user.DataVersion, user.Gtc)
 	return nil
 }
 
-func HandleSendGTC(conn net.Conn, tid string, version uint32, gtc string) {
+func HandleSendGTC(c chan string, tid string, version uint32, gtc string) {
 	res := fmt.Sprintf("GTC %s %d %s\r\n", tid, version, gtc)
-	log.Println(">>>", res)
-	conn.Write([]byte(res))
+	c <- res
 }

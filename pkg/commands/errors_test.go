@@ -16,11 +16,12 @@ func TestSendError(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		conn := &mockConn{}
-		SendError(conn, tt.transactionID, tt.errorCode)
+		c := make(chan string)
 
-		if conn.buffer.String() != tt.expected {
-			t.Errorf("expected %q, got %q", tt.expected, conn.buffer.String())
+		go SendError(c, tt.transactionID, tt.errorCode)
+
+		if got := <-c; got != tt.expected {
+			t.Errorf("expected %q, got %q", tt.expected, got)
 		}
 	}
 }

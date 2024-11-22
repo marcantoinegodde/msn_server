@@ -1,12 +1,6 @@
 package commands
 
-import (
-	"log"
-	"net"
-)
-
-func HandleOUT(conn net.Conn) {
+func HandleOUT(c chan string) {
 	res := "OUT\r\n"
-	log.Println(">>>", res)
-	conn.Write([]byte(res))
+	c <- res
 }

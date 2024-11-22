@@ -2,8 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"log"
-	"net"
 )
 
 const (
@@ -53,8 +51,7 @@ const (
 	ERR_PASSPORT_NOT_VERIFIED    = 924
 )
 
-func SendError(conn net.Conn, transactionID string, errorCode int) {
+func SendError(c chan string, transactionID string, errorCode int) {
 	res := fmt.Sprintf("%d %s\r\n", errorCode, transactionID)
-	log.Println(">>>", res)
-	conn.Write([]byte(res))
+	c <- res
 }

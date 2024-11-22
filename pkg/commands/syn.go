@@ -3,16 +3,14 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"log"
 	"msnserver/pkg/database"
-	"net"
 	"strconv"
 	"strings"
 
 	"gorm.io/gorm"
 )
 
-func HandleSYN(conn net.Conn, db *gorm.DB, s *Session, arguments string) error {
+func HandleSYN(c chan string, db *gorm.DB, s *Session, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
@@ -25,7 +23,7 @@ func HandleSYN(conn net.Conn, db *gorm.DB, s *Session, arguments string) error {
 	}
 
 	if !s.connected {
-		SendError(conn, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -38,26 +36,25 @@ func HandleSYN(conn net.Conn, db *gorm.DB, s *Session, arguments string) error {
 	}
 
 	res := fmt.Sprintf("SYN %s %d\r\n", transactionID, user.DataVersion)
-	log.Println(">>>", res)
-	conn.Write([]byte(res))
+	c <- res
 
 	if uint32(version) != user.DataVersion {
 		// Start user's data synchronization
 
 		// Send GTC
-		HandleSendGTC(conn, transactionID, user.DataVersion, user.Gtc)
+		HandleSendGTC(c, transactionID, user.DataVersion, user.Gtc)
 
 		// Send BLP
-		HandleSendBLP(conn, transactionID, user.DataVersion, user.Blp)
+		HandleSendBLP(c, transactionID, user.DataVersion, user.Blp)
 
 		// Send LST FL
-		HandleSendLST(conn, transactionID, "FL", &user)
+		HandleSendLST(c, transactionID, "FL", &user)
 		// Send LST AL
-		HandleSendLST(conn, transactionID, "AL", &user)
+		HandleSendLST(c, transactionID, "AL", &user)
 		// Send LST BL
-		HandleSendLST(conn, transactionID, "BL", &user)
+		HandleSendLST(c, transactionID, "BL", &user)
 		// Send LST RL
-		HandleSendLST(conn, transactionID, "RL", &user)
+		HandleSendLST(c, transactionID, "RL", &user)
 	}
 
 	return nil

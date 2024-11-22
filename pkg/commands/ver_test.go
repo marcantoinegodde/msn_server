@@ -18,14 +18,18 @@ func TestHandleVER(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		mock := &mockConn{}
-		err := HandleVER(mock, tt.arguments)
+		c := make(chan string, 1)
 
-		if got := mock.buffer.String(); got != tt.expected {
-			t.Errorf("HandleVER(%q) = %q, want %q", tt.arguments, got, tt.expected)
-		}
+		err := HandleVER(c, tt.arguments)
+
 		if (err == nil) != tt.ok {
 			t.Errorf("HandleVER(%q) = %v, want %v", tt.arguments, err == nil, tt.ok)
+		}
+
+		if tt.expected != "" {
+			if got := <-c; got != tt.expected {
+				t.Errorf("HandleVER(%q) = %q, want %q", tt.arguments, got, tt.expected)
+			}
 		}
 	}
 }

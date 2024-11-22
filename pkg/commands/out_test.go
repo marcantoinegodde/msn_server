@@ -5,12 +5,12 @@ import (
 )
 
 func TestHandleOUT(t *testing.T) {
+	c := make(chan string)
 	expected := "OUT\r\n"
 
-	mock := &mockConn{}
-	HandleOUT(mock)
+	go HandleOUT(c)
 
-	if got := mock.buffer.String(); got != expected {
+	if got := <-c; got != expected {
 		t.Errorf("HandleOUT() = %q, want %q", got, expected)
 	}
 }

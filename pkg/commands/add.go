@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"msnserver/pkg/database"
-	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
+func HandleADD(c chan string, db *gorm.DB, s *Session, args string) error {
 	// TODO: Add asynchronous communication reverse list
 	// TODO: Add group number to forward list
 
@@ -40,18 +39,18 @@ func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	}
 
 	if !s.connected {
-		SendError(conn, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
 	if !isValidEmail(email) {
-		SendError(conn, transactionID, ERR_INVALID_PARAMETER)
+		SendError(c, transactionID, ERR_INVALID_PARAMETER)
 		log.Printf("Error: invalid email: %s\n", email)
 		return nil
 	}
 
 	if s.email == email {
-		SendError(conn, transactionID, ERR_INVALID_USER)
+		SendError(c, transactionID, ERR_INVALID_USER)
 		log.Printf("Error: tried to add self to list\n")
 		return nil
 	}
@@ -67,7 +66,7 @@ func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	var principal database.User
 	query = db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&principal, "email = ?", email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		SendError(conn, transactionID, ERR_INVALID_USER)
+		SendError(c, transactionID, ERR_INVALID_USER)
 		log.Printf("Error: user not found: %s\n", email)
 		return nil
 	} else if query.Error != nil {
@@ -77,13 +76,13 @@ func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	switch listName {
 	case "FL":
 		if len(user.ForwardList) >= 150 {
-			SendError(conn, transactionID, ERR_LIST_FULL)
+			SendError(c, transactionID, ERR_LIST_FULL)
 			log.Printf("Error: forward list full\n")
 			return nil
 		}
 
 		if isMember(user.ForwardList, &principal) {
-			SendError(conn, transactionID, ERR_ALREADY_THERE)
+			SendError(c, transactionID, ERR_ALREADY_THERE)
 			log.Printf("Error: user already in forward list\n")
 			return nil
 		}
@@ -102,19 +101,19 @@ func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 
 	case "AL":
 		if len(user.AllowList) >= 150 {
-			SendError(conn, transactionID, ERR_LIST_FULL)
+			SendError(c, transactionID, ERR_LIST_FULL)
 			log.Printf("Error: allow list full\n")
 			return nil
 		}
 
 		if isMember(user.AllowList, &principal) {
-			SendError(conn, transactionID, ERR_ALREADY_THERE)
+			SendError(c, transactionID, ERR_ALREADY_THERE)
 			log.Printf("Error: user already in allow list\n")
 			return nil
 		}
 
 		if isMember(user.BlockList, &principal) {
-			SendError(conn, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
+			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Printf("Error: trying to add in AL and BL\n")
 			return nil
 		}
@@ -127,19 +126,19 @@ func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 
 	case "BL":
 		if len(user.BlockList) >= 150 {
-			SendError(conn, transactionID, ERR_LIST_FULL)
+			SendError(c, transactionID, ERR_LIST_FULL)
 			log.Printf("Error: block list full\n")
 			return nil
 		}
 
 		if isMember(user.BlockList, &principal) {
-			SendError(conn, transactionID, ERR_ALREADY_THERE)
+			SendError(c, transactionID, ERR_ALREADY_THERE)
 			log.Printf("Error: user already in block list\n")
 			return nil
 		}
 
 		if isMember(user.AllowList, &principal) {
-			SendError(conn, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
+			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Printf("Error: trying to add in AL and BL\n")
 			return nil
 		}
@@ -165,11 +164,10 @@ func HandleADD(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 	} else {
 		res = fmt.Sprintf("ADD %s %s %d %s %s\r\n", transactionID, listName, user.DataVersion, email, displayName)
 	}
-	log.Println(">>>", res)
-	conn.Write([]byte(res))
+	c <- res
 
 	if listName == "FL" {
-		HandleSendILN(conn, transactionID, principal.Status, principal.Email, principal.Name)
+		HandleSendILN(c, transactionID, principal.Status, principal.Email, principal.Name)
 	}
 
 	return nil

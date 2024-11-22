@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"msnserver/pkg/database"
-	"net"
 	"net/url"
 	"strings"
 
@@ -14,7 +13,7 @@ import (
 
 var blockedWords = []string{"microsoft", "msn", "fuck"}
 
-func HandleREA(conn net.Conn, db *gorm.DB, s *Session, args string) error {
+func HandleREA(c chan string, db *gorm.DB, s *Session, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
@@ -42,13 +41,13 @@ func HandleREA(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 
 	for _, word := range blockedWords {
 		if strings.Contains(strings.ToLower(newName), word) {
-			SendError(conn, tid, ERR_INVALID_FRIENDLY_NAME)
+			SendError(c, tid, ERR_INVALID_FRIENDLY_NAME)
 			return nil
 		}
 	}
 
 	if !s.connected {
-		SendError(conn, tid, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -71,8 +70,7 @@ func HandleREA(conn net.Conn, db *gorm.DB, s *Session, args string) error {
 		}
 
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.Name)
-		log.Println(">>>", res)
-		conn.Write([]byte(res))
+		c <- res
 
 	} else {
 		// TODO: Add principal's name modification
