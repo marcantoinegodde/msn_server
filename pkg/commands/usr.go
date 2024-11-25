@@ -32,7 +32,7 @@ func HandleReceiveUSR(s *Session, arguments string) (string, error) {
 	s.authState = splitArguments[1]
 
 	if splitArguments[1] == "I" {
-		s.email = splitArguments[2]
+		s.Email = splitArguments[2]
 	} else if splitArguments[1] == "S" {
 		s.password = splitArguments[2]
 	} else {
@@ -48,7 +48,7 @@ func HandleSendUSR(c chan string, db *gorm.DB, s *Session, transactionID string)
 	case "MD5":
 		if s.authState == "I" {
 			var user database.User
-			query := db.First(&user, "email = ?", s.email)
+			query := db.First(&user, "email = ?", s.Email)
 			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 				SendError(c, transactionID, ERR_AUTHENTICATION_FAILED)
 				return errors.New("user not found")
@@ -59,9 +59,10 @@ func HandleSendUSR(c chan string, db *gorm.DB, s *Session, transactionID string)
 			res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, s.authMethod, "S", user.Salt)
 			c <- res
 			return nil
+
 		} else if s.authState == "S" {
 			var user database.User
-			query := db.First(&user, "email = ?", s.email)
+			query := db.First(&user, "email = ?", s.Email)
 			if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 				SendError(c, transactionID, ERR_AUTHENTICATION_FAILED)
 				return errors.New("user not found")

@@ -6,24 +6,19 @@ import (
 	"msnserver/pkg/commands"
 	"net"
 	"strings"
-	"sync"
 
 	"gorm.io/gorm"
 )
 
 type DispatchServer struct {
-	db      *gorm.DB
-	config  *config.MSNServerConfiguration
-	m       sync.Mutex
-	clients map[string]*Client
+	db     *gorm.DB
+	config *config.MSNServerConfiguration
 }
 
 func NewDispatchServer(db *gorm.DB, c *config.MSNServerConfiguration) *DispatchServer {
 	return &DispatchServer{
-		db:      db,
-		config:  c,
-		m:       sync.Mutex{},
-		clients: map[string]*Client{},
+		db:     db,
+		config: c,
 	}
 }
 
@@ -53,24 +48,15 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 		id:       conn.RemoteAddr().String(),
 		conn:     conn,
 		sendChan: make(chan string),
+		session:  &commands.Session{},
 	}
 
 	defer func() {
-		ds.m.Lock()
-		delete(ds.clients, c.id)
-		ds.m.Unlock()
-
 		conn.Close()
 		log.Println("Client disconnected:", conn.RemoteAddr())
 	}()
 
-	ds.m.Lock()
-	ds.clients[c.id] = c
-	ds.m.Unlock()
-
 	go c.sendHandler()
-
-	s := &commands.Session{}
 
 	for {
 		buffer := make([]byte, 1024)
@@ -102,7 +88,7 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 				}
 
 			case "USR":
-				tid, err := commands.HandleReceiveUSR(s, arguments)
+				tid, err := commands.HandleReceiveUSR(c.session, arguments)
 				if err != nil {
 					log.Println("Error:", err)
 					close(c.sendChan)

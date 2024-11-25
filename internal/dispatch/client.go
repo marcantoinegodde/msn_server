@@ -2,6 +2,7 @@ package dispatch
 
 import (
 	"log"
+	"msnserver/pkg/commands"
 	"net"
 )
 
@@ -9,6 +10,7 @@ type Client struct {
 	id       string
 	conn     net.Conn
 	sendChan chan string
+	session  *commands.Session
 }
 
 func (c *Client) sendHandler() {

@@ -49,14 +49,14 @@ func HandleADD(c chan string, db *gorm.DB, s *Session, args string) error {
 		return nil
 	}
 
-	if s.email == email {
+	if s.Email == email {
 		SendError(c, transactionID, ERR_INVALID_USER)
 		log.Printf("Error: tried to add self to list\n")
 		return nil
 	}
 
 	var user database.User
-	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&user, "email = ?", s.email)
+	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&user, "email = ?", s.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {

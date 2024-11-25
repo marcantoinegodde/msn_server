@@ -1,9 +1,9 @@
 package commands
 
 type Session struct {
+	Email      string
 	authMethod string
 	authState  string
-	email      string
 	password   string
 	connected  bool
 }

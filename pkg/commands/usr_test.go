@@ -11,7 +11,7 @@ func TestHandleUSRDispatch(t *testing.T) {
 		expectedSession       Session
 		ok                    bool
 	}{
-		{"2 MD5 I example@passport.com", "2", Session{authMethod: "MD5", authState: "I", email: "example@passport.com", password: ""}, true},
+		{"2 MD5 I example@passport.com", "2", Session{Email: "example@passport.com", authMethod: "MD5", authState: "I", password: ""}, true},
 		{"MD5 I example@passport.com", "", Session{}, false},
 		{"2 MD5 I", "", Session{}, false},
 		{"2 MD5 I example@passport.com foo", "", Session{}, false},
@@ -38,8 +38,8 @@ func TestHandleUSRDispatch(t *testing.T) {
 			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.authState, tt.expectedSession.authState)
 		}
 
-		if s.email != tt.expectedSession.email {
-			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.email, tt.expectedSession.email)
+		if s.Email != tt.expectedSession.Email {
+			t.Errorf("Username HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.Email, tt.expectedSession.Email)
 		}
 
 	}

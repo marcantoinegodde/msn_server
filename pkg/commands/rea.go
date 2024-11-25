@@ -51,11 +51,11 @@ func HandleREA(c chan string, db *gorm.DB, s *Session, args string) error {
 		return errors.New("not logged in")
 	}
 
-	if s.email == email {
+	if s.Email == email {
 		// TODO: Add asynchronous communication to other users
 
 		var user database.User
-		query := db.First(&user, "email = ?", s.email)
+		query := db.First(&user, "email = ?", s.Email)
 		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 			return errors.New("user not found")
 		} else if query.Error != nil {
