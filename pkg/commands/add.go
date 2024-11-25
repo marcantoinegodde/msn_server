@@ -7,15 +7,12 @@ import (
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"gorm.io/gorm"
 )
 
 func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) error {
-	// TODO: Add group number to forward list
-
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -23,20 +20,13 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	}
 
 	splitArguments := strings.Fields(args)
-	if len(splitArguments) < 3 || len(splitArguments) > 4 {
+	if len(splitArguments) != 3 {
 		return errors.New("invalid transaction")
 	}
 
 	listName := splitArguments[0]
 	email := splitArguments[1]
 	displayName := splitArguments[2]
-	var groupNum int
-	if len(splitArguments) == 4 {
-		groupNum, err = strconv.Atoi(splitArguments[3])
-		if err != nil {
-			return fmt.Errorf("invalid group number: %w", err)
-		}
-	}
 
 	if !s.Connected {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
@@ -163,12 +153,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		return err
 	}
 
-	var res string
-	if groupNum != 0 {
-		res = fmt.Sprintf("ADD %s %s %d %s %s %d\r\n", transactionID, listName, user.DataVersion, email, displayName, groupNum)
-	} else {
-		res = fmt.Sprintf("ADD %s %s %d %s %s\r\n", transactionID, listName, user.DataVersion, email, displayName)
-	}
+	res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", transactionID, listName, user.DataVersion, email, displayName)
 	c <- res
 
 	if listName == "FL" {
