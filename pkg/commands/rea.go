@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"net/url"
 	"strings"
@@ -13,7 +14,7 @@ import (
 
 var blockedWords = []string{"microsoft", "msn", "fuck"}
 
-func HandleREA(c chan string, db *gorm.DB, s *Session, args string) error {
+func HandleREA(c chan string, db *gorm.DB, s *clients.Session, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
@@ -46,7 +47,7 @@ func HandleREA(c chan string, db *gorm.DB, s *Session, args string) error {
 		}
 	}
 
-	if !s.connected {
+	if !s.Connected {
 		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}

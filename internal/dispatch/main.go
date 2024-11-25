@@ -3,6 +3,7 @@ package dispatch
 import (
 	"log"
 	"msnserver/config"
+	"msnserver/pkg/clients"
 	"msnserver/pkg/commands"
 	"net"
 	"strings"
@@ -44,11 +45,11 @@ func (ds *DispatchServer) Start() {
 }
 
 func (ds *DispatchServer) handleConnection(conn net.Conn) {
-	c := &Client{
-		id:       conn.RemoteAddr().String(),
-		conn:     conn,
-		sendChan: make(chan string),
-		session:  &commands.Session{},
+	c := &clients.Client{
+		Id:       conn.RemoteAddr().String(),
+		Conn:     conn,
+		SendChan: make(chan string),
+		Session:  &clients.Session{},
 	}
 
 	defer func() {
@@ -56,7 +57,7 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 		log.Println("Client disconnected:", conn.RemoteAddr())
 	}()
 
-	go c.sendHandler()
+	go c.SendHandler()
 
 	for {
 		buffer := make([]byte, 1024)
@@ -76,34 +77,34 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 
 			switch command {
 			case "VER":
-				if err := commands.HandleVER(c.sendChan, arguments); err != nil {
+				if err := commands.HandleVER(c.SendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "INF":
-				if err := commands.HandleINF(c.sendChan, arguments); err != nil {
+				if err := commands.HandleINF(c.SendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "USR":
-				tid, err := commands.HandleReceiveUSR(c.session, arguments)
+				tid, err := commands.HandleReceiveUSR(c.Session, arguments)
 				if err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
-				commands.HandleXFR(c.sendChan, ds.config.DispatchServer, tid)
-				close(c.sendChan)
+				commands.HandleXFR(c.SendChan, ds.config.DispatchServer, tid)
+				close(c.SendChan)
 
 			case "OUT":
-				commands.HandleOUT(c.sendChan)
-				close(c.sendChan)
+				commands.HandleOUT(c.SendChan)
+				close(c.SendChan)
 
 			default:
 				log.Println("Unknown command:", command)
-				close(c.sendChan)
+				close(c.SendChan)
 			}
 		}()
 	}

@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"slices"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 var listTypes = []string{"FL", "AL", "BL", "RL"}
 
-func HandleLST(c chan string, db *gorm.DB, s *Session, args string) error {
+func HandleLST(c chan string, db *gorm.DB, s *clients.Session, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -23,7 +24,7 @@ func HandleLST(c chan string, db *gorm.DB, s *Session, args string) error {
 		return errors.New("invalid list")
 	}
 
-	if !s.connected {
+	if !s.Connected {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}

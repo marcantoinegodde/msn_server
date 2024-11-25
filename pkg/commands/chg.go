@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"slices"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 var statusCodes = []string{"NLN", "FLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN"}
 
-func HandleCHG(c chan string, db *gorm.DB, s *Session, args string) error {
+func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -24,7 +25,7 @@ func HandleCHG(c chan string, db *gorm.DB, s *Session, args string) error {
 		return fmt.Errorf("invalid status code: %s", args)
 	}
 
-	if !s.connected {
+	if !s.Connected {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}

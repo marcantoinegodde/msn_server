@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"regexp"
 	"strconv"
@@ -12,8 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleADD(c chan string, db *gorm.DB, s *Session, args string) error {
-	// TODO: Add asynchronous communication reverse list
+func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) error {
 	// TODO: Add group number to forward list
 
 	args, _, _ = strings.Cut(args, "\r\n")
@@ -38,7 +38,7 @@ func HandleADD(c chan string, db *gorm.DB, s *Session, args string) error {
 		}
 	}
 
-	if !s.connected {
+	if !s.Connected {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
@@ -97,6 +97,11 @@ func HandleADD(c chan string, db *gorm.DB, s *Session, args string) error {
 		principal.DataVersion++
 		if err := db.Save(&principal).Error; err != nil {
 			return err
+		}
+
+		if clients[principal.Email] != nil {
+			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", "RL", principal.DataVersion, user.Email, user.Name)
+			clients[principal.Email].SendChan <- res
 		}
 
 	case "AL":

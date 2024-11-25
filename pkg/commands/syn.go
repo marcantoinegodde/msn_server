@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"strconv"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleSYN(c chan string, db *gorm.DB, s *Session, arguments string) error {
+func HandleSYN(c chan string, db *gorm.DB, s *clients.Session, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
@@ -22,7 +23,7 @@ func HandleSYN(c chan string, db *gorm.DB, s *Session, arguments string) error {
 		return err
 	}
 
-	if !s.connected {
+	if !s.Connected {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}

@@ -3,6 +3,7 @@ package notification
 import (
 	"log"
 	"msnserver/config"
+	"msnserver/pkg/clients"
 	"msnserver/pkg/commands"
 	"net"
 	"strings"
@@ -15,7 +16,7 @@ type NotificationServer struct {
 	db      *gorm.DB
 	config  *config.MSNServerConfiguration
 	m       sync.Mutex
-	clients map[string]*Client
+	clients map[string]*clients.Client
 }
 
 func NewNotificationServer(db *gorm.DB, c *config.MSNServerConfiguration) *NotificationServer {
@@ -23,7 +24,7 @@ func NewNotificationServer(db *gorm.DB, c *config.MSNServerConfiguration) *Notif
 		db:      db,
 		config:  c,
 		m:       sync.Mutex{},
-		clients: map[string]*Client{},
+		clients: map[string]*clients.Client{},
 	}
 }
 
@@ -49,28 +50,29 @@ func (ns *NotificationServer) Start() {
 }
 
 func (ns *NotificationServer) handleConnection(conn net.Conn) {
-	c := &Client{
-		id:       conn.RemoteAddr().String(),
-		conn:     conn,
-		sendChan: make(chan string),
-		session:  &commands.Session{},
+	c := &clients.Client{
+		Id:       conn.RemoteAddr().String(),
+		Conn:     conn,
+		SendChan: make(chan string),
+		Session:  &clients.Session{},
 	}
 
 	defer func() {
 		ns.m.Lock()
-		delete(ns.clients, c.session.Email)
+		delete(ns.clients, c.Session.Email)
 		ns.m.Unlock()
 
 		conn.Close()
 		log.Println("Client disconnected:", conn.RemoteAddr())
 	}()
 
-	go c.sendHandler()
+	go c.SendHandler()
 
 	for {
 		buffer := make([]byte, 1024)
 		_, err := conn.Read(buffer)
 		if err != nil {
+			log.Println("Error reading from connection:", err)
 			return
 		}
 
@@ -85,82 +87,82 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 
 			switch command {
 			case "VER":
-				if err := commands.HandleVER(c.sendChan, arguments); err != nil {
+				if err := commands.HandleVER(c.SendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "INF":
-				if err := commands.HandleINF(c.sendChan, arguments); err != nil {
+				if err := commands.HandleINF(c.SendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "USR":
-				tid, err := commands.HandleReceiveUSR(c.session, arguments)
+				tid, err := commands.HandleReceiveUSR(c.Session, arguments)
 				if err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
-				if err := commands.HandleSendUSR(c.sendChan, ns.db, c.session, tid); err != nil {
+				if err := commands.HandleSendUSR(c.SendChan, ns.db, c.Session, tid); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 				ns.m.Lock()
-				ns.clients[c.session.Email] = c
+				ns.clients[c.Session.Email] = c
 				ns.m.Unlock()
 
 			case "SYN":
-				if err := commands.HandleSYN(c.sendChan, ns.db, c.session, arguments); err != nil {
+				if err := commands.HandleSYN(c.SendChan, ns.db, c.Session, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "CHG":
-				if err := commands.HandleCHG(c.sendChan, ns.db, c.session, arguments); err != nil {
+				if err := commands.HandleCHG(c.SendChan, ns.db, c.Session, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "CVR":
-				if err := commands.HandleCVR(c.sendChan, arguments); err != nil {
+				if err := commands.HandleCVR(c.SendChan, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "GTC":
-				if err := commands.HandleGTC(c.sendChan, ns.db, c.session, arguments); err != nil {
+				if err := commands.HandleGTC(c.SendChan, ns.db, c.Session, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "BLP":
-				if err := commands.HandleBLP(c.sendChan, ns.db, c.session, arguments); err != nil {
+				if err := commands.HandleBLP(c.SendChan, ns.db, c.Session, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "ADD":
-				if err := commands.HandleADD(c.sendChan, ns.db, c.session, arguments); err != nil {
+				if err := commands.HandleADD(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "REA":
-				if err := commands.HandleREA(c.sendChan, ns.db, c.session, arguments); err != nil {
+				if err := commands.HandleREA(c.SendChan, ns.db, c.Session, arguments); err != nil {
 					log.Println("Error:", err)
-					close(c.sendChan)
+					close(c.SendChan)
 				}
 
 			case "OUT":
-				commands.HandleOUT(c.sendChan)
-				close(c.sendChan)
+				commands.HandleOUT(c.SendChan)
+				close(c.SendChan)
 
 			default:
 				log.Println("Unknown command:", command)
-				close(c.sendChan)
+				close(c.SendChan)
 			}
 		}()
 	}

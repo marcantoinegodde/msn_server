@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"msnserver/pkg/clients"
 	"testing"
 )
 
@@ -8,17 +9,17 @@ func TestHandleUSRDispatch(t *testing.T) {
 	tests := []struct {
 		arguments             string
 		expectedTransactionID string
-		expectedSession       Session
+		expectedSession       clients.Session
 		ok                    bool
 	}{
-		{"2 MD5 I example@passport.com", "2", Session{Email: "example@passport.com", authMethod: "MD5", authState: "I", password: ""}, true},
-		{"MD5 I example@passport.com", "", Session{}, false},
-		{"2 MD5 I", "", Session{}, false},
-		{"2 MD5 I example@passport.com foo", "", Session{}, false},
+		{"2 MD5 I example@passport.com", "2", clients.Session{Email: "example@passport.com", AuthMethod: "MD5", AuthState: "I", Password: ""}, true},
+		{"MD5 I example@passport.com", "", clients.Session{}, false},
+		{"2 MD5 I", "", clients.Session{}, false},
+		{"2 MD5 I example@passport.com foo", "", clients.Session{}, false},
 	}
 
 	for _, tt := range tests {
-		s := &Session{}
+		s := &clients.Session{}
 
 		gotTransactionID, gotErr := HandleReceiveUSR(s, tt.arguments)
 
@@ -30,12 +31,12 @@ func TestHandleUSRDispatch(t *testing.T) {
 			t.Errorf("TransactionID HandleReceiveUSR(%q) = %q, want %q", tt.arguments, gotTransactionID, tt.expectedTransactionID)
 		}
 
-		if s.authMethod != tt.expectedSession.authMethod {
-			t.Errorf("AuthMethod HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.authMethod, tt.expectedSession.authMethod)
+		if s.AuthMethod != tt.expectedSession.AuthMethod {
+			t.Errorf("AuthMethod HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.AuthMethod, tt.expectedSession.AuthMethod)
 		}
 
-		if s.authState != tt.expectedSession.authState {
-			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.authState, tt.expectedSession.authState)
+		if s.AuthState != tt.expectedSession.AuthState {
+			t.Errorf("AuthState HandleReceiveUSR(%q) = %q, want %q", tt.arguments, s.AuthState, tt.expectedSession.AuthState)
 		}
 
 		if s.Email != tt.expectedSession.Email {
