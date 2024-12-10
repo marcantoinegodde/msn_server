@@ -5,6 +5,7 @@ import (
 	"msnserver/config"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/commands"
+	"msnserver/pkg/database"
 	"net"
 	"strings"
 	"sync"
@@ -58,6 +59,13 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 	}
 
 	defer func() {
+		var user database.User
+		query := ns.db.First(&user, "email = ?", c.Session.Email)
+		if query.Error == nil {
+			user.Status = "FLN"
+			ns.db.Save(&user)
+		}
+
 		ns.m.Lock()
 		delete(ns.clients, c.Session.Email)
 		ns.m.Unlock()
@@ -121,9 +129,20 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				}
 
 			case "CHG":
-				if err := commands.HandleCHG(c.SendChan, ns.db, c.Session, arguments); err != nil {
+				status, err := commands.HandleCHG(c.SendChan, ns.db, c.Session, ns.clients, arguments)
+				if err != nil {
 					log.Println("Error:", err)
 					close(c.SendChan)
+				}
+
+				if status == "HDN" {
+					if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
+						log.Println("Error:", err)
+					}
+				} else {
+					if err := commands.HandleSendNLN(ns.db, ns.clients, c.Session); err != nil {
+						log.Println("Error:", err)
+					}
 				}
 
 			case "CVR":
@@ -158,6 +177,9 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 
 			case "OUT":
 				commands.HandleOUT(c.SendChan)
+				if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
+					log.Println("Error:", err)
+				}
 				close(c.SendChan)
 
 			default:

@@ -13,41 +13,42 @@ import (
 
 var statusCodes = []string{"NLN", "FLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN"}
 
-func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, args string) error {
+func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) (string, error) {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
-		return err
+		return "", err
 	}
 	args, _, _ = strings.Cut(args, " ") // Remove the trailing space sent for this command
 
 	if !slices.Contains(statusCodes, args) {
-		return fmt.Errorf("invalid status code: %s", args)
+		return "", fmt.Errorf("invalid status code: %s", args)
 	}
 
 	if !s.Connected {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
-		return errors.New("not logged in")
+		return "", errors.New("not logged in")
 	}
 
 	// Perform nested preloading to load users lists of contacts on user's forward list
 	var user database.User
-	query := db.Preload("ForwardList.ForwardList").Preload("ForwardList.AllowList").Preload("ForwardList.BlockList").First(&user, "email = ?", s.Email)
+	query := db.Preload("ForwardList.ForwardList").Preload("ForwardList.AllowList").Preload("ForwardList.BlockList").Preload("ReverseList").First(&user, "email = ?", s.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		return errors.New("user not found")
+		return "", errors.New("user not found")
 	} else if query.Error != nil {
-		return query.Error
+		return "", query.Error
 	}
 
 	user.Status = args
 	query = db.Save(&user)
 	if query.Error != nil {
-		return query.Error
+		return "", query.Error
 	}
 
 	res := fmt.Sprintf("CHG %s %s\r\n", transactionID, user.Status)
 	c <- res
 
+	// Handle ILN on first CHG
 	if !s.InitialPresenceNotification {
 		s.InitialPresenceNotification = true
 
@@ -70,8 +71,7 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 			// Send initial presence notification
 			HandleSendILN(c, transactionID, contact.Status, contact.Email, contact.Name)
 		}
-
 	}
 
-	return nil
+	return user.Status, nil
 }
