@@ -20,5 +20,18 @@ func Load(c config.Database) (*gorm.DB, error) {
 
 	db.AutoMigrate(&User{})
 
+	resetUsersStatus(db)
+
+	log.Println("Database connected successfully")
+
 	return db, nil
+}
+
+func resetUsersStatus(db *gorm.DB) {
+	err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&User{}).Update("status", "FLN").Error
+	if err != nil {
+		log.Fatalf("failed to reset column value: %v", err)
+	}
+
+	log.Println("Column 'status' reset successfully")
 }
