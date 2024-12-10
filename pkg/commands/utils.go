@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"math"
+	"msnserver/pkg/database"
 	"strconv"
 	"strings"
 )
@@ -23,4 +24,14 @@ func parseTransactionID(arguments string) (string, string, error) {
 	}
 
 	return transactionID, arguments, nil
+}
+
+func isMember(userList []*database.User, principal *database.User) bool {
+	for _, u := range userList {
+		if u.Email == principal.Email {
+			return true
+		}
+	}
+
+	return false
 }

@@ -30,8 +30,9 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		return errors.New("not logged in")
 	}
 
+	// Perform nested preloading to load users lists of contacts on user's forward list
 	var user database.User
-	query := db.First(&user, "email = ?", s.Email)
+	query := db.Preload("ForwardList.ForwardList").Preload("ForwardList.AllowList").Preload("ForwardList.BlockList").First(&user, "email = ?", s.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -46,5 +47,31 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 
 	res := fmt.Sprintf("CHG %s %s\r\n", transactionID, user.Status)
 	c <- res
+
+	if !s.InitialPresenceNotification {
+		s.InitialPresenceNotification = true
+
+		for _, contact := range user.ForwardList {
+			// Skip contacts that are offline or hidden
+			if contact.Status == "FLN" || contact.Status == "HDN" {
+				continue
+			}
+
+			// Skip contacts that have the user on their block list
+			if isMember(contact.BlockList, &user) {
+				continue
+			}
+
+			// Skip contacts in BL mode that don't have the user on their allow list
+			if contact.Blp == "BL" && !isMember(contact.AllowList, &user) {
+				continue
+			}
+
+			// Send initial presence notification
+			HandleSendILN(c, transactionID, contact.Status, contact.Email, contact.Name)
+		}
+
+	}
+
 	return nil
 }

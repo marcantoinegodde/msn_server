@@ -77,18 +77,21 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			return nil
 		}
 
+		// Add principal to user's forward list
 		user.ForwardList = append(user.ForwardList, &principal)
 		user.DataVersion++
 		if err := db.Save(&user).Error; err != nil {
 			return err
 		}
 
+		// Add user to principal's reverse list
 		principal.ReverseList = append(principal.ReverseList, &user)
 		principal.DataVersion++
 		if err := db.Save(&principal).Error; err != nil {
 			return err
 		}
 
+		// Notify principal if online
 		if clients[principal.Email] != nil {
 			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", "RL", principal.DataVersion, user.Email, user.Name)
 			clients[principal.Email].SendChan <- res
@@ -113,6 +116,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			return nil
 		}
 
+		// Add principal to user's allow list
 		user.AllowList = append(user.AllowList, &principal)
 		user.DataVersion++
 		if err := db.Save(&user).Error; err != nil {
@@ -138,6 +142,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			return nil
 		}
 
+		// Add principal to user's block list
 		user.BlockList = append(user.BlockList, &principal)
 		user.DataVersion++
 		if err := db.Save(&user).Error; err != nil {
@@ -145,6 +150,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		}
 
 	case "RL":
+		// User cannot modify reverse list
 		err := errors.New("tried to add to reverse list")
 		return err
 
@@ -156,6 +162,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", transactionID, listName, user.DataVersion, email, displayName)
 	c <- res
 
+	// TODO: Rework this to consider privacy settings
 	if listName == "FL" {
 		HandleSendILN(c, transactionID, principal.Status, principal.Email, principal.Name)
 	}
@@ -167,14 +174,4 @@ func isValidEmail(email string) bool {
 	const emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	re := regexp.MustCompile(emailRegex)
 	return re.MatchString(email)
-}
-
-func isMember(userList []*database.User, principal *database.User) bool {
-	for _, u := range userList {
-		if u.Email == principal.Email {
-			return true
-		}
-	}
-
-	return false
 }
