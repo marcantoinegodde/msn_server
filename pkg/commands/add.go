@@ -162,8 +162,19 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", transactionID, listName, user.DataVersion, email, displayName)
 	c <- res
 
-	// TODO: Rework this to consider privacy settings
 	if listName == "FL" {
+		if principal.Status == "FLN" || principal.Status == "HDN" {
+			return nil
+		}
+
+		if isMember(principal.BlockList, &user) {
+			return nil
+		}
+
+		if principal.Blp == "BL" && !isMember(principal.AllowList, &user) {
+			return nil
+		}
+
 		HandleSendILN(c, transactionID, principal.Status, principal.Email, principal.Name)
 	}
 
