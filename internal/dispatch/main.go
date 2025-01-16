@@ -7,18 +7,14 @@ import (
 	"msnserver/pkg/commands"
 	"net"
 	"strings"
-
-	"gorm.io/gorm"
 )
 
 type DispatchServer struct {
-	db     *gorm.DB
 	config *config.MSNServerConfiguration
 }
 
-func NewDispatchServer(db *gorm.DB, c *config.MSNServerConfiguration) *DispatchServer {
+func NewDispatchServer(c *config.MSNServerConfiguration) *DispatchServer {
 	return &DispatchServer{
-		db:     db,
 		config: c,
 	}
 }
@@ -89,7 +85,7 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 				}
 
 			case "USR":
-				tid, err := commands.HandleReceiveUSR(c.Session, arguments)
+				tid, err := commands.HandleUSRDispatch(arguments)
 				if err != nil {
 					log.Println("Error:", err)
 					close(c.SendChan)
