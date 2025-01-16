@@ -70,6 +70,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 		delete(ns.clients, c.Session.Email)
 		ns.m.Unlock()
 
+		close(c.SendChan)
 		conn.Close()
 		log.Println("Client disconnected:", conn.RemoteAddr())
 	}()
@@ -84,102 +85,100 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			return
 		}
 
-		go func() {
-			data := string(buffer)
-			log.Println("<<<", data)
+		data := string(buffer)
+		log.Printf("[%s] <<< %s\n", c.Id, data)
 
-			command, arguments, found := strings.Cut(data, " ")
-			if !found {
-				command, _, _ = strings.Cut(data, "\r\n")
+		command, arguments, found := strings.Cut(data, " ")
+		if !found {
+			command, _, _ = strings.Cut(data, "\r\n")
+		}
+
+		switch command {
+		case "VER":
+			if err := commands.HandleVER(c.SendChan, arguments); err != nil {
+				log.Println("Error:", err)
+				return
 			}
 
-			switch command {
-			case "VER":
-				if err := commands.HandleVER(c.SendChan, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
+		case "INF":
+			if err := commands.HandleINF(c.SendChan, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
 
-			case "INF":
-				if err := commands.HandleINF(c.SendChan, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
+		case "USR":
+			if err := commands.HandleUSR(c.SendChan, ns.db, c.Session, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
 
-			case "USR":
-				if err := commands.HandleUSR(c.SendChan, ns.db, c.Session, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
+			ns.m.Lock()
+			ns.clients[c.Session.Email] = c
+			ns.m.Unlock()
 
-				ns.m.Lock()
-				ns.clients[c.Session.Email] = c
-				ns.m.Unlock()
+		case "SYN":
+			if err := commands.HandleSYN(c.SendChan, ns.db, c.Session, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
 
-			case "SYN":
-				if err := commands.HandleSYN(c.SendChan, ns.db, c.Session, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
+		case "CHG":
+			status, err := commands.HandleCHG(c.SendChan, ns.db, c.Session, ns.clients, arguments)
+			if err != nil {
+				log.Println("Error:", err)
+				return
+			}
 
-			case "CHG":
-				status, err := commands.HandleCHG(c.SendChan, ns.db, c.Session, ns.clients, arguments)
-				if err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
-
-				if status == "HDN" {
-					if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
-						log.Println("Error:", err)
-					}
-				} else {
-					if err := commands.HandleSendNLN(ns.db, ns.clients, c.Session); err != nil {
-						log.Println("Error:", err)
-					}
-				}
-
-			case "CVR":
-				if err := commands.HandleCVR(c.SendChan, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
-
-			case "GTC":
-				if err := commands.HandleGTC(c.SendChan, ns.db, c.Session, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
-
-			case "BLP":
-				if err := commands.HandleBLP(c.SendChan, ns.db, c.Session, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
-
-			case "ADD":
-				if err := commands.HandleADD(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
-
-			case "REA":
-				if err := commands.HandleREA(c.SendChan, ns.db, c.Session, arguments); err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
-
-			case "OUT":
-				commands.HandleOUT(c.SendChan)
+			if status == "HDN" {
 				if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
 					log.Println("Error:", err)
 				}
-				close(c.SendChan)
-
-			default:
-				log.Println("Unknown command:", command)
-				close(c.SendChan)
+			} else {
+				if err := commands.HandleSendNLN(ns.db, ns.clients, c.Session); err != nil {
+					log.Println("Error:", err)
+				}
 			}
-		}()
+
+		case "CVR":
+			if err := commands.HandleCVR(c.SendChan, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
+		case "GTC":
+			if err := commands.HandleGTC(c.SendChan, ns.db, c.Session, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
+		case "BLP":
+			if err := commands.HandleBLP(c.SendChan, ns.db, c.Session, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
+		case "ADD":
+			if err := commands.HandleADD(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
+		case "REA":
+			if err := commands.HandleREA(c.SendChan, ns.db, c.Session, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
+		case "OUT":
+			commands.HandleOUT(c.SendChan)
+			if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
+				log.Println("Error:", err)
+			}
+			return
+
+		default:
+			log.Println("Unknown command:", command)
+			return
+		}
 	}
 }

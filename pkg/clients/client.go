@@ -22,7 +22,7 @@ func (c *Client) SendHandler() {
 			return
 		}
 
-		log.Println(">>>", msg)
+		log.Printf("[%s] >>> %s\n", c.Id, msg)
 		if _, err := c.Conn.Write([]byte(msg)); err != nil {
 			log.Println("Error:", err)
 			return
