@@ -107,13 +107,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				}
 
 			case "USR":
-				tid, err := commands.HandleReceiveUSR(c.Session, arguments)
-				if err != nil {
-					log.Println("Error:", err)
-					close(c.SendChan)
-				}
-
-				if err := commands.HandleSendUSR(c.SendChan, ns.db, c.Session, tid); err != nil {
+				if err := commands.HandleUSR(c.SendChan, ns.db, c.Session, arguments); err != nil {
 					log.Println("Error:", err)
 					close(c.SendChan)
 				}

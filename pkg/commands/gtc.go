@@ -24,7 +24,7 @@ func HandleGTC(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		return errors.New("invalid mode")
 	}
 
-	if !s.Connected {
+	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}

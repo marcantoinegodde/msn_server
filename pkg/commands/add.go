@@ -28,7 +28,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	email := splitArguments[1]
 	displayName := splitArguments[2]
 
-	if !s.Connected {
+	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}

@@ -25,7 +25,7 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		return "", fmt.Errorf("invalid status code: %s", args)
 	}
 
-	if !s.Connected {
+	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return "", errors.New("not logged in")
 	}

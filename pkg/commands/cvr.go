@@ -14,7 +14,7 @@ const (
 
 func HandleCVR(c chan string, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
-	transactionID, args, err := parseTransactionID(args)
+	transactionID, _, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}

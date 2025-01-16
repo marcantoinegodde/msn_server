@@ -23,7 +23,7 @@ func HandleSYN(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 		return err
 	}
 
-	if !s.Connected {
+	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}

@@ -47,7 +47,7 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		}
 	}
 
-	if !s.Connected {
+	if !s.Authenticated {
 		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
