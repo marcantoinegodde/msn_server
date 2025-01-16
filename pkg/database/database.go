@@ -22,7 +22,7 @@ func Load(c config.Database) (*gorm.DB, error) {
 
 	resetUsersStatus(db)
 
-	log.Println("Database connected successfully")
+	log.Println("Database initialized successfully")
 
 	return db, nil
 }
@@ -30,8 +30,8 @@ func Load(c config.Database) (*gorm.DB, error) {
 func resetUsersStatus(db *gorm.DB) {
 	err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&User{}).Update("status", "FLN").Error
 	if err != nil {
-		log.Fatalf("failed to reset column value: %v", err)
+		log.Fatalf("Failed to reset column 'status': %v", err)
 	}
 
-	log.Println("Column 'status' reset successfully")
+	log.Println("Column 'status' reseted successfully")
 }
