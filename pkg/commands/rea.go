@@ -3,7 +3,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"log"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"net/url"
@@ -52,16 +51,16 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		return errors.New("not logged in")
 	}
 
+	var user database.User
+	query := db.First(&user, "email = ?", s.Email)
+	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
+		return errors.New("user not found")
+	} else if query.Error != nil {
+		return query.Error
+	}
+
 	if s.Email == email {
 		// TODO: Add asynchronous communication to other users
-
-		var user database.User
-		query := db.First(&user, "email = ?", s.Email)
-		if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-			return errors.New("user not found")
-		} else if query.Error != nil {
-			return query.Error
-		}
 
 		user.Name = newName
 		user.DataVersion++
@@ -74,8 +73,16 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		c <- res
 
 	} else {
-		// TODO: Add principal's name modification
-		log.Println("Not implemented")
+		// TODO: Improve this, store the nicknames
+
+		user.DataVersion++
+		query = db.Save(&user)
+		if query.Error != nil {
+			return query.Error
+		}
+
+		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, email, newName)
+		c <- res
 	}
 
 	return nil
