@@ -41,7 +41,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 
 	if s.Email == email {
 		SendError(c, transactionID, ERR_INVALID_USER)
-		log.Printf("Error: tried to add self to list\n")
+		log.Println("Error: tried to add self to list")
 		return nil
 	}
 
@@ -67,13 +67,13 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	case "FL":
 		if len(user.ForwardList) >= 150 {
 			SendError(c, transactionID, ERR_LIST_FULL)
-			log.Printf("Error: forward list full\n")
+			log.Println("Error: forward list full")
 			return nil
 		}
 
 		if isMember(user.ForwardList, &principal) {
 			SendError(c, transactionID, ERR_ALREADY_THERE)
-			log.Printf("Error: user already in forward list\n")
+			log.Println("Error: user already in forward list")
 			return nil
 		}
 
@@ -100,19 +100,19 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	case "AL":
 		if len(user.AllowList) >= 150 {
 			SendError(c, transactionID, ERR_LIST_FULL)
-			log.Printf("Error: allow list full\n")
+			log.Println("Error: allow list full")
 			return nil
 		}
 
 		if isMember(user.AllowList, &principal) {
 			SendError(c, transactionID, ERR_ALREADY_THERE)
-			log.Printf("Error: user already in allow list\n")
+			log.Println("Error: user already in allow list")
 			return nil
 		}
 
 		if isMember(user.BlockList, &principal) {
 			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
-			log.Printf("Error: trying to add in AL and BL\n")
+			log.Println("Error: trying to add in AL and BL")
 			return nil
 		}
 
@@ -126,19 +126,19 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	case "BL":
 		if len(user.BlockList) >= 150 {
 			SendError(c, transactionID, ERR_LIST_FULL)
-			log.Printf("Error: block list full\n")
+			log.Println("Error: block list full")
 			return nil
 		}
 
 		if isMember(user.BlockList, &principal) {
 			SendError(c, transactionID, ERR_ALREADY_THERE)
-			log.Printf("Error: user already in block list\n")
+			log.Println("Error: user already in block list")
 			return nil
 		}
 
 		if isMember(user.AllowList, &principal) {
 			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
-			log.Printf("Error: trying to add in AL and BL\n")
+			log.Println("Error: trying to add in AL and BL")
 			return nil
 		}
 
