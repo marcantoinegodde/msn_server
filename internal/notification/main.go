@@ -163,6 +163,12 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				return
 			}
 
+		case "REM":
+			if err := commands.HandleREM(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
 		case "REA":
 			if err := commands.HandleREA(c.SendChan, ns.db, c.Session, arguments); err != nil {
 				log.Println("Error:", err)
