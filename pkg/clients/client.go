@@ -15,7 +15,7 @@ type Client struct {
 }
 
 func (c *Client) SendHandler() {
-	defer c.Conn.Close()
+	defer c.Wg.Done()
 
 	for {
 		msg, ok := <-c.SendChan
