@@ -3,12 +3,14 @@ package clients
 import (
 	"log"
 	"net"
+	"sync"
 )
 
 type Client struct {
 	Id       string
 	Conn     net.Conn
 	SendChan chan string
+	Wg       sync.WaitGroup
 	Session  *Session
 }
 

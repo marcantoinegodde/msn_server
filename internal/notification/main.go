@@ -71,10 +71,12 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 		ns.m.Unlock()
 
 		close(c.SendChan)
+		c.Wg.Wait()
 		conn.Close()
 		log.Println("Client disconnected:", conn.RemoteAddr())
 	}()
 
+	c.Wg.Add(1)
 	go c.SendHandler()
 
 	for {

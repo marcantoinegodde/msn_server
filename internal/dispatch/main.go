@@ -50,10 +50,12 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 
 	defer func() {
 		close(c.SendChan)
+		c.Wg.Wait()
 		conn.Close()
 		log.Println("Client disconnected:", conn.RemoteAddr())
 	}()
 
+	c.Wg.Add(1)
 	go c.SendHandler()
 
 	for {
@@ -64,7 +66,7 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 		}
 
 		data := string(buffer)
-		log.Println("<<<", data)
+		log.Printf("[%s] <<< %s\n", c.Id, data)
 
 		command, arguments, found := strings.Cut(data, " ")
 		if !found {
