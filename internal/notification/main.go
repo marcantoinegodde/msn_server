@@ -66,6 +66,10 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			ns.db.Save(&user)
 		}
 
+		if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
+			log.Println("Error:", err)
+		}
+
 		ns.m.Lock()
 		delete(ns.clients, c.Session.Email)
 		ns.m.Unlock()
@@ -179,9 +183,6 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 
 		case "OUT":
 			commands.HandleOUT(c.SendChan)
-			if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
-				log.Println("Error:", err)
-			}
 			return
 
 		default:
