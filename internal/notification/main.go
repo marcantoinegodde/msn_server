@@ -131,21 +131,10 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			}
 
 		case "CHG":
-			status, err := commands.HandleCHG(c.SendChan, ns.db, c.Session, ns.clients, arguments)
+			err := commands.HandleCHG(c.SendChan, ns.db, c.Session, ns.clients, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
-			}
-
-			// Inform followers (RL) of the status change
-			if status == "HDN" {
-				if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
-					log.Println("Error:", err)
-				}
-			} else {
-				if err := commands.HandleSendNLN(ns.db, ns.clients, c.Session); err != nil {
-					log.Println("Error:", err)
-				}
 			}
 
 		case "CVR":
