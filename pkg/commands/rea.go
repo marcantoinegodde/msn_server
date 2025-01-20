@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"log"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"net/url"
@@ -13,7 +14,7 @@ import (
 
 var blockedWords = []string{"microsoft", "msn", "fuck"}
 
-func HandleREA(c chan string, db *gorm.DB, s *clients.Session, args string) error {
+func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
@@ -60,8 +61,6 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 	}
 
 	if s.Email == email {
-		// TODO: Add asynchronous communication to other users
-
 		user.Name = newName
 		user.DataVersion++
 		query = db.Save(&user)
@@ -71,6 +70,10 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.Name)
 		c <- res
+
+		if err := HandleSendNLN(db, clients, s); err != nil {
+			log.Println("Error:", err)
+		}
 
 	} else {
 		// TODO: Improve this, store the nicknames

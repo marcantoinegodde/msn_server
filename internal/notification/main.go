@@ -168,7 +168,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			}
 
 		case "REA":
-			if err := commands.HandleREA(c.SendChan, ns.db, c.Session, arguments); err != nil {
+			if err := commands.HandleREA(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
