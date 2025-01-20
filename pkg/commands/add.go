@@ -104,12 +104,6 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			return nil
 		}
 
-		if isMember(user.AllowList, &principal) {
-			SendError(c, transactionID, ERR_ALREADY_THERE)
-			log.Println("Error: user already in allow list")
-			return nil
-		}
-
 		if isMember(user.BlockList, &principal) {
 			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
@@ -127,12 +121,6 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		if len(user.BlockList) >= 150 {
 			SendError(c, transactionID, ERR_LIST_FULL)
 			log.Println("Error: block list full")
-			return nil
-		}
-
-		if isMember(user.BlockList, &principal) {
-			SendError(c, transactionID, ERR_ALREADY_THERE)
-			log.Println("Error: user already in block list")
 			return nil
 		}
 
