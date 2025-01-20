@@ -67,7 +67,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				ns.db.Save(&user)
 			}
 
-			if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
+			if err := commands.HandleBatchFLN(ns.db, ns.clients, c.Session); err != nil {
 				log.Println("Error:", err)
 			}
 

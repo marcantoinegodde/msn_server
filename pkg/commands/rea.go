@@ -71,7 +71,7 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.Name)
 		c <- res
 
-		if err := HandleSendNLN(db, clients, s); err != nil {
+		if err := HandleBatchNLN(db, clients, s); err != nil {
 			log.Println("Error:", err)
 		}
 

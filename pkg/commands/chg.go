@@ -76,11 +76,11 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 
 	// Inform followers (RL) of the status change
 	if user.Status == "HDN" {
-		if err := HandleSendFLN(db, clients, s); err != nil {
+		if err := HandleBatchFLN(db, clients, s); err != nil {
 			log.Println("Error:", err)
 		}
 	} else {
-		if err := HandleSendNLN(db, clients, s); err != nil {
+		if err := HandleBatchNLN(db, clients, s); err != nil {
 			log.Println("Error:", err)
 		}
 	}

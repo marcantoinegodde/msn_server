@@ -124,6 +124,8 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			return err
 		}
 
+		HandleSendNLN(clients[principal.Email].SendChan, user.Status, user.Email, user.Name)
+
 	case "BL":
 		if len(user.BlockList) >= 150 {
 			SendError(c, transactionID, ERR_LIST_FULL)
@@ -143,6 +145,8 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		if err := db.Save(&user).Error; err != nil {
 			return err
 		}
+
+		HandleSendFLN(clients[principal.Email].SendChan, user.Email)
 
 	case "RL":
 		// User cannot modify reverse list

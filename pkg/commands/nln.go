@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleSendNLN(db *gorm.DB, clients map[string]*clients.Client, s *clients.Session) error {
+func HandleBatchNLN(db *gorm.DB, clients map[string]*clients.Client, s *clients.Session) error {
 	var user database.User
 	query := db.Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", s.Email)
 	if query.Error != nil {
@@ -32,9 +32,13 @@ func HandleSendNLN(db *gorm.DB, clients map[string]*clients.Client, s *clients.S
 			continue
 		}
 
-		res := fmt.Sprintf("NLN %s %s %s\r\n", user.Status, user.Email, user.Name)
-		clients[contact.Email].SendChan <- res
+		HandleSendNLN(clients[contact.Email].SendChan, user.Status, user.Email, user.Name)
 	}
 
 	return nil
+}
+
+func HandleSendNLN(c chan string, status string, email string, name string) {
+	res := fmt.Sprintf("NLN %s %s %s\r\n", status, email, name)
+	c <- res
 }
