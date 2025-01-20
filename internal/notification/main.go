@@ -59,20 +59,22 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 	}
 
 	defer func() {
-		var user database.User
-		query := ns.db.First(&user, "email = ?", c.Session.Email)
-		if query.Error == nil {
-			user.Status = "FLN"
-			ns.db.Save(&user)
-		}
+		if c.Session.Email != "" {
+			var user database.User
+			query := ns.db.First(&user, "email = ?", c.Session.Email)
+			if query.Error == nil {
+				user.Status = "FLN"
+				ns.db.Save(&user)
+			}
 
-		if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
-			log.Println("Error:", err)
-		}
+			if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
+				log.Println("Error:", err)
+			}
 
-		ns.m.Lock()
-		delete(ns.clients, c.Session.Email)
-		ns.m.Unlock()
+			ns.m.Lock()
+			delete(ns.clients, c.Session.Email)
+			ns.m.Unlock()
+		}
 
 		close(c.SendChan)
 		c.Wg.Wait()
@@ -135,6 +137,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				return
 			}
 
+			// Inform followers (RL) of the status change
 			if status == "HDN" {
 				if err := commands.HandleSendFLN(ns.db, ns.clients, c.Session); err != nil {
 					log.Println("Error:", err)
