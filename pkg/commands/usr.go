@@ -18,7 +18,7 @@ func HandleUSR(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 		return err
 	}
 
-	splitArguments := strings.Split(arguments, " ")
+	splitArguments := strings.Fields(arguments)
 	if len(splitArguments) != 3 {
 		err := errors.New("invalid transaction")
 		return err

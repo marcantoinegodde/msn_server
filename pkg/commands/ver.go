@@ -14,7 +14,7 @@ func HandleVER(c chan string, arguments string) error {
 	if err != nil {
 		return err
 	}
-	clientProtocols := strings.Split(arguments, " ")
+	clientProtocols := strings.Fields(arguments)
 
 	serverProtocols := []string{}
 	for _, protocol := range clientProtocols {
