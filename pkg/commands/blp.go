@@ -20,13 +20,13 @@ func HandleBLP(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		return err
 	}
 
-	if !slices.Contains(blpMode, args) {
-		return errors.New("invalid mode")
-	}
-
 	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
+	}
+
+	if !slices.Contains(blpMode, args) {
+		return errors.New("invalid mode")
 	}
 
 	var user database.User

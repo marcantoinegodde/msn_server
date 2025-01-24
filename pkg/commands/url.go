@@ -36,6 +36,11 @@ func HandleURL(c chan string, s *clients.Session, args string) error {
 		return err
 	}
 
+	if !s.Authenticated {
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
+		return errors.New("not logged in")
+	}
+
 	var urlType string
 	// var parameter string
 
@@ -47,11 +52,6 @@ func HandleURL(c chan string, s *clients.Session, args string) error {
 		// parameter = splitArguments[1]
 	} else {
 		return errors.New("invalid transaction")
-	}
-
-	if !s.Authenticated {
-		SendError(c, tid, ERR_NOT_LOGGED_IN)
-		return errors.New("not logged in")
 	}
 
 	url, ok := urlArgs[urlType]

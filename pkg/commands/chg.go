@@ -22,13 +22,13 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	}
 	args, _, _ = strings.Cut(args, " ") // Remove the trailing space sent for this command
 
-	if !slices.Contains(statusCodes, args) {
-		return fmt.Errorf("invalid status code: %s", args)
-	}
-
 	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
+	}
+
+	if !slices.Contains(statusCodes, args) {
+		return fmt.Errorf("invalid status code: %s", args)
 	}
 
 	// Perform nested preloading to load users lists of contacts on user's forward list

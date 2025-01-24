@@ -21,6 +21,11 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		return err
 	}
 
+	if !s.Authenticated {
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
+		return errors.New("not logged in")
+	}
+
 	splitArguments := strings.Fields(args)
 	if len(splitArguments) != 2 {
 		return errors.New("invalid transaction")
@@ -45,11 +50,6 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			SendError(c, tid, ERR_INVALID_FRIENDLY_NAME)
 			return nil
 		}
-	}
-
-	if !s.Authenticated {
-		SendError(c, tid, ERR_NOT_LOGGED_IN)
-		return errors.New("not logged in")
 	}
 
 	var user database.User

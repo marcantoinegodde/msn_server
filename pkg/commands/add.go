@@ -19,6 +19,11 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		return err
 	}
 
+	if !s.Authenticated {
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+		return errors.New("not logged in")
+	}
+
 	splitArguments := strings.Fields(args)
 	if len(splitArguments) != 3 {
 		return errors.New("invalid transaction")
@@ -27,11 +32,6 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	listName := splitArguments[0]
 	email := splitArguments[1]
 	displayName := splitArguments[2]
-
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
-		return errors.New("not logged in")
-	}
 
 	if !isValidEmail(email) {
 		SendError(c, transactionID, ERR_INVALID_PARAMETER)

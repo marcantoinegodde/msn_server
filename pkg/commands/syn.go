@@ -18,14 +18,14 @@ func HandleSYN(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 		return err
 	}
 
-	version, err := strconv.Atoi(arguments)
-	if err != nil {
-		return err
-	}
-
 	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
+	}
+
+	version, err := strconv.Atoi(arguments)
+	if err != nil {
+		return err
 	}
 
 	var user database.User

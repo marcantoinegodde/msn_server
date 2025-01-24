@@ -18,6 +18,11 @@ func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		return err
 	}
 
+	if !s.Authenticated {
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+		return errors.New("not logged in")
+	}
+
 	splitArguments := strings.Fields(args)
 	if len(splitArguments) != 2 {
 		return errors.New("invalid transaction")
@@ -25,11 +30,6 @@ func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 
 	listName := splitArguments[0]
 	email := splitArguments[1]
-
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
-		return errors.New("not logged in")
-	}
 
 	var user database.User
 	query := db.First(&user, "email = ?", s.Email)

@@ -20,13 +20,13 @@ func HandleLST(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		return err
 	}
 
-	if !slices.Contains(listTypes, args) {
-		return errors.New("invalid list")
-	}
-
 	if !s.Authenticated {
 		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
+	}
+
+	if !slices.Contains(listTypes, args) {
+		return errors.New("invalid list")
 	}
 
 	var user database.User
