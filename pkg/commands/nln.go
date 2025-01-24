@@ -32,7 +32,7 @@ func HandleBatchNLN(db *gorm.DB, clients map[string]*clients.Client, s *clients.
 			continue
 		}
 
-		HandleSendNLN(clients[contact.Email].SendChan, user.Status, user.Email, user.Name)
+		HandleSendNLN(clients[contact.Email].SendChan, user.Status, user.Email, user.DisplayName)
 	}
 
 	return nil

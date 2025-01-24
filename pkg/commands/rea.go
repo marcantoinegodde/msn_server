@@ -26,22 +26,22 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		return errors.New("invalid transaction")
 	}
 
-	email, newName := splitArguments[0], splitArguments[1]
+	email, newDisplayName := splitArguments[0], splitArguments[1]
 
-	if _, err := url.PathUnescape(newName); err != nil {
+	if _, err := url.PathUnescape(newDisplayName); err != nil {
 		return errors.New("invalid new name")
 	}
 
-	if strings.ContainsAny(newName, " \t\n\r") {
+	if strings.ContainsAny(newDisplayName, " \t\n\r") {
 		return errors.New("invalid new name")
 	}
 
-	if len(newName) > 129 {
+	if len(newDisplayName) > 129 {
 		return errors.New("new name too long")
 	}
 
 	for _, word := range blockedWords {
-		if strings.Contains(strings.ToLower(newName), word) {
+		if strings.Contains(strings.ToLower(newDisplayName), word) {
 			SendError(c, tid, ERR_INVALID_FRIENDLY_NAME)
 			return nil
 		}
@@ -61,14 +61,14 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	}
 
 	if s.Email == email {
-		user.Name = newName
+		user.DisplayName = newDisplayName
 		user.DataVersion++
 		query = db.Save(&user)
 		if query.Error != nil {
 			return query.Error
 		}
 
-		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.Name)
+		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.DisplayName)
 		c <- res
 
 		if err := HandleBatchNLN(db, clients, s); err != nil {
@@ -84,7 +84,7 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			return query.Error
 		}
 
-		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, email, newName)
+		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, email, newDisplayName)
 		c <- res
 	}
 

@@ -93,7 +93,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 
 		// Notify principal if online
 		if clients[principal.Email] != nil {
-			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", "RL", principal.DataVersion, user.Email, user.Name)
+			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", "RL", principal.DataVersion, user.Email, user.DisplayName)
 			clients[principal.Email].SendChan <- res
 		}
 
@@ -101,7 +101,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		if !(principal.Status == "FLN" || principal.Status == "HDN") &&
 			!isMember(principal.BlockList, &user) &&
 			!(principal.Blp == "BL" && !isMember(principal.AllowList, &user)) {
-			HandleSendILN(c, transactionID, principal.Status, principal.Email, principal.Name)
+			HandleSendILN(c, transactionID, principal.Status, principal.Email, principal.DisplayName)
 		}
 
 	case "AL":
@@ -124,7 +124,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			return err
 		}
 
-		HandleSendNLN(clients[principal.Email].SendChan, user.Status, user.Email, user.Name)
+		HandleSendNLN(clients[principal.Email].SendChan, user.Status, user.Email, user.DisplayName)
 
 	case "BL":
 		if len(user.BlockList) >= 150 {

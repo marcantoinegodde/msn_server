@@ -47,7 +47,7 @@ func HandleSendLST(c chan string, tid string, lt string, u *database.User) error
 	switch lt {
 	case "FL":
 		for i, f := range u.ForwardList {
-			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ForwardList), f.Email, f.Name)
+			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ForwardList), f.Email, f.DisplayName)
 			c <- res
 		}
 		if len(u.ForwardList) == 0 {
@@ -58,7 +58,7 @@ func HandleSendLST(c chan string, tid string, lt string, u *database.User) error
 
 	case "AL":
 		for i, a := range u.AllowList {
-			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.AllowList), a.Email, a.Name)
+			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.AllowList), a.Email, a.DisplayName)
 			c <- res
 		}
 		if len(u.AllowList) == 0 {
@@ -69,7 +69,7 @@ func HandleSendLST(c chan string, tid string, lt string, u *database.User) error
 
 	case "BL":
 		for i, b := range u.BlockList {
-			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.BlockList), b.Email, b.Name)
+			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.BlockList), b.Email, b.DisplayName)
 			c <- res
 		}
 		if len(u.BlockList) == 0 {
@@ -80,7 +80,7 @@ func HandleSendLST(c chan string, tid string, lt string, u *database.User) error
 
 	case "RL":
 		for i, r := range u.ReverseList {
-			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ReverseList), r.Email, r.Name)
+			res := fmt.Sprintf("LST %s %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ReverseList), r.Email, r.DisplayName)
 			c <- res
 		}
 		if len(u.ReverseList) == 0 {

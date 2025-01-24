@@ -70,7 +70,7 @@ func HandleUSR(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 
 		s.Authenticated = true
 
-		res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, "OK", user.Email, user.Name)
+		res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, "OK", user.Email, user.DisplayName)
 		c <- res
 		return nil
 

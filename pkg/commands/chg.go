@@ -70,7 +70,7 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			}
 
 			// Send initial presence notification
-			HandleSendILN(c, transactionID, contact.Status, contact.Email, contact.Name)
+			HandleSendILN(c, transactionID, contact.Status, contact.Email, contact.DisplayName)
 		}
 	}
 
