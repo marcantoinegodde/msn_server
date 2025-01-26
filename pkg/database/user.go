@@ -8,6 +8,11 @@ type User struct {
 	Email       string `gorm:"uniqueIndex"`
 	Salt        string
 	Password    string
+	FirstName   string
+	LastName    string
+	Country     string
+	State       string
+	City        string
 	DisplayName string
 	Status      string  `gorm:"default:FLN"`
 	DataVersion uint32  `gorm:"default:0"`

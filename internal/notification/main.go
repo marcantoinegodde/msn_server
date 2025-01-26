@@ -173,6 +173,12 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				return
 			}
 
+		case "FND":
+			if err := commands.HandleFND(c.SendChan, ns.db, c.Session, arguments); err != nil {
+				log.Println("Error:", err)
+				return
+			}
+
 		case "SND":
 			if err := commands.HandleSND(c.SendChan, c.Session, arguments); err != nil {
 				log.Println("Error:", err)
