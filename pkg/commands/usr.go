@@ -18,13 +18,16 @@ func HandleUSR(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 		return err
 	}
 
+	if s.Authenticated {
+		SendError(c, transactionID, ERR_ALREADY_LOGIN)
+		return nil
+	}
+
 	splitArguments := strings.Fields(arguments)
 	if len(splitArguments) != 3 {
 		err := errors.New("invalid transaction")
 		return err
 	}
-
-	s.Authenticated = false
 
 	var authMethod = splitArguments[0]
 	var authState = splitArguments[1]
