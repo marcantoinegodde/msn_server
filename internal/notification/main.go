@@ -67,7 +67,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				ns.db.Save(&user)
 			}
 
-			if err := commands.HandleBatchFLN(ns.db, ns.clients, c.Session); err != nil {
+			if err := commands.HandleBatchFLN(ns.db, ns.clients, c); err != nil {
 				log.Println("Error:", err)
 			}
 
@@ -103,19 +103,19 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 
 		switch command {
 		case "VER":
-			if err := commands.HandleVER(c.SendChan, arguments); err != nil {
+			if err := commands.HandleVER(c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "INF":
-			if err := commands.HandleINF(c.SendChan, arguments); err != nil {
+			if err := commands.HandleINF(c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "USR":
-			if err := commands.HandleUSR(c.SendChan, ns.db, c.Session, arguments); err != nil {
+			if err := commands.HandleUSR(ns.db, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
@@ -125,74 +125,74 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			ns.m.Unlock()
 
 		case "SYN":
-			if err := commands.HandleSYN(c.SendChan, ns.db, c.Session, arguments); err != nil {
+			if err := commands.HandleSYN(ns.db, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "CHG":
-			err := commands.HandleCHG(c.SendChan, ns.db, c.Session, ns.clients, arguments)
+			err := commands.HandleCHG(ns.db, ns.clients, c, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "CVR":
-			if err := commands.HandleCVR(c.SendChan, arguments); err != nil {
+			if err := commands.HandleCVR(c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "GTC":
-			if err := commands.HandleGTC(c.SendChan, ns.db, c.Session, arguments); err != nil {
+			if err := commands.HandleGTC(ns.db, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "BLP":
-			if err := commands.HandleBLP(c.SendChan, ns.db, c.Session, arguments); err != nil {
+			if err := commands.HandleBLP(ns.db, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "ADD":
-			if err := commands.HandleADD(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
+			if err := commands.HandleADD(ns.db, ns.clients, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "REM":
-			if err := commands.HandleREM(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
+			if err := commands.HandleREM(ns.db, ns.clients, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "REA":
-			if err := commands.HandleREA(c.SendChan, ns.db, c.Session, ns.clients, arguments); err != nil {
+			if err := commands.HandleREA(ns.db, ns.clients, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "FND":
-			if err := commands.HandleFND(c.SendChan, ns.db, c.Session, arguments); err != nil {
+			if err := commands.HandleFND(ns.db, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "SND":
-			if err := commands.HandleSND(c.SendChan, c.Session, arguments); err != nil {
+			if err := commands.HandleSND(c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "URL":
-			if err := commands.HandleURL(c.SendChan, c.Session, arguments); err != nil {
+			if err := commands.HandleURL(c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "OUT":
-			commands.HandleOUT(c.SendChan)
+			commands.HandleOUT(c)
 			return
 
 		default:

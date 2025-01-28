@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"msnserver/pkg/clients"
 	"testing"
 )
 
@@ -18,7 +19,9 @@ func TestHandleVER(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		c := make(chan string, 1)
+		c := &clients.Client{
+			SendChan: make(chan string, 1),
+		}
 
 		err := HandleVER(c, tt.arguments)
 
@@ -27,7 +30,7 @@ func TestHandleVER(t *testing.T) {
 		}
 
 		if tt.expected != "" {
-			if got := <-c; got != tt.expected {
+			if got := <-c.SendChan; got != tt.expected {
 				t.Errorf("HandleVER(%q) = %q, want %q", tt.arguments, got, tt.expected)
 			}
 		}

@@ -12,15 +12,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) error {
+func HandleADD(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -34,19 +34,19 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	displayName := splitArguments[2]
 
 	if !isValidEmail(email) {
-		SendError(c, transactionID, ERR_INVALID_PARAMETER)
+		SendError(c.SendChan, transactionID, ERR_INVALID_PARAMETER)
 		log.Printf("Error: invalid email: %s\n", email)
 		return nil
 	}
 
-	if s.Email == email {
-		SendError(c, transactionID, ERR_INVALID_USER)
+	if c.Session.Email == email {
+		SendError(c.SendChan, transactionID, ERR_INVALID_USER)
 		log.Println("Error: tried to add self to list")
 		return nil
 	}
 
 	var user database.User
-	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&user, "email = ?", s.Email)
+	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -56,7 +56,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	var principal database.User
 	query = db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&principal, "email = ?", email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		SendError(c, transactionID, ERR_INVALID_USER)
+		SendError(c.SendChan, transactionID, ERR_INVALID_USER)
 		log.Printf("Error: user not found: %s\n", email)
 		return nil
 	} else if query.Error != nil {
@@ -66,13 +66,13 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	switch listName {
 	case "FL":
 		if len(user.ForwardList) >= 150 {
-			SendError(c, transactionID, ERR_LIST_FULL)
+			SendError(c.SendChan, transactionID, ERR_LIST_FULL)
 			log.Println("Error: forward list full")
 			return nil
 		}
 
 		if isMember(user.ForwardList, &principal) {
-			SendError(c, transactionID, ERR_ALREADY_THERE)
+			SendError(c.SendChan, transactionID, ERR_ALREADY_THERE)
 			log.Println("Error: user already in forward list")
 			return nil
 		}
@@ -101,18 +101,18 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		if !(principal.Status == "FLN" || principal.Status == "HDN") &&
 			!isMember(principal.BlockList, &user) &&
 			!(principal.Blp == "BL" && !isMember(principal.AllowList, &user)) {
-			HandleSendILN(c, transactionID, principal.Status, principal.Email, principal.DisplayName)
+			HandleSendILN(c.SendChan, transactionID, principal.Status, principal.Email, principal.DisplayName)
 		}
 
 	case "AL":
 		if len(user.AllowList) >= 150 {
-			SendError(c, transactionID, ERR_LIST_FULL)
+			SendError(c.SendChan, transactionID, ERR_LIST_FULL)
 			log.Println("Error: allow list full")
 			return nil
 		}
 
 		if isMember(user.BlockList, &principal) {
-			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
+			SendError(c.SendChan, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
 			return nil
 		}
@@ -128,13 +128,13 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 
 	case "BL":
 		if len(user.BlockList) >= 150 {
-			SendError(c, transactionID, ERR_LIST_FULL)
+			SendError(c.SendChan, transactionID, ERR_LIST_FULL)
 			log.Println("Error: block list full")
 			return nil
 		}
 
 		if isMember(user.AllowList, &principal) {
-			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
+			SendError(c.SendChan, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
 			return nil
 		}
@@ -159,7 +159,7 @@ func HandleADD(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	}
 
 	res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", transactionID, listName, user.DataVersion, email, displayName)
-	c <- res
+	c.SendChan <- res
 
 	return nil
 }

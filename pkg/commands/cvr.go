@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"msnserver/pkg/clients"
 	"strings"
 )
 
@@ -12,7 +13,7 @@ const (
 	infoURL            = "http://messenger.hotmail.com"
 )
 
-func HandleCVR(c chan string, args string) error {
+func HandleCVR(c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, _, err := parseTransactionID(args)
 	if err != nil {
@@ -20,6 +21,6 @@ func HandleCVR(c chan string, args string) error {
 	}
 
 	res := fmt.Sprintf("CVR %s %s %s %s %s %s\r\n", transactionID, recommendedVersion, recommendedVersion, minimumVersion, downloadURL, infoURL)
-	c <- res
+	c.SendChan <- res
 	return nil
 }

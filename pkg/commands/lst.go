@@ -13,15 +13,15 @@ import (
 
 var listTypes = []string{"FL", "AL", "BL", "RL"}
 
-func HandleLST(c chan string, db *gorm.DB, s *clients.Session, args string) error {
+func HandleLST(db *gorm.DB, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -30,14 +30,14 @@ func HandleLST(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 	}
 
 	var user database.User
-	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", s.Email)
+	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
 		return query.Error
 	}
 
-	if err := HandleSendLST(c, transactionID, args, &user); err != nil {
+	if err := HandleSendLST(c.SendChan, transactionID, args, &user); err != nil {
 		return err
 	}
 	return nil

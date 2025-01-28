@@ -75,13 +75,13 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 
 		switch command {
 		case "VER":
-			if err := commands.HandleVER(c.SendChan, arguments); err != nil {
+			if err := commands.HandleVER(c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "INF":
-			if err := commands.HandleINF(c.SendChan, arguments); err != nil {
+			if err := commands.HandleINF(c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
@@ -93,11 +93,11 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 				return
 			}
 
-			commands.HandleXFR(c.SendChan, ds.config.DispatchServer, tid)
+			commands.HandleXFR(ds.config.DispatchServer, c, tid)
 			return
 
 		case "OUT":
-			commands.HandleOUT(c.SendChan)
+			commands.HandleOUT(c)
 			return
 
 		default:

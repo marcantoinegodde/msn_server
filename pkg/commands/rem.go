@@ -11,15 +11,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) error {
+func HandleREM(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -32,7 +32,7 @@ func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	email := splitArguments[1]
 
 	var user database.User
-	query := db.First(&user, "email = ?", s.Email)
+	query := db.First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -45,7 +45,7 @@ func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("ForwardList").Find(&principal)
 		if err != nil {
-			SendError(c, transactionID, ERR_NOT_ON_LIST)
+			SendError(c.SendChan, transactionID, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -83,7 +83,7 @@ func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("AllowList").Find(&principal)
 		if err != nil {
-			SendError(c, transactionID, ERR_NOT_ON_LIST)
+			SendError(c.SendChan, transactionID, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -104,7 +104,7 @@ func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("BlockList").Find(&principal)
 		if err != nil {
-			SendError(c, transactionID, ERR_NOT_ON_LIST)
+			SendError(c.SendChan, transactionID, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -131,7 +131,7 @@ func HandleREM(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	}
 
 	res := fmt.Sprintf("REM %s %s %d %s\r\n", transactionID, listName, user.DataVersion, email)
-	c <- res
+	c.SendChan <- res
 
 	return nil
 }

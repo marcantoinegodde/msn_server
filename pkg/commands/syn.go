@@ -11,15 +11,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleSYN(c chan string, db *gorm.DB, s *clients.Session, arguments string) error {
+func HandleSYN(db *gorm.DB, c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -29,7 +29,7 @@ func HandleSYN(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 	}
 
 	var user database.User
-	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", s.Email)
+	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -37,25 +37,25 @@ func HandleSYN(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 	}
 
 	res := fmt.Sprintf("SYN %s %d\r\n", transactionID, user.DataVersion)
-	c <- res
+	c.SendChan <- res
 
 	if uint32(version) != user.DataVersion {
 		// Start user's data synchronization
 
 		// Send GTC
-		HandleSendGTC(c, transactionID, user.DataVersion, user.Gtc)
+		HandleSendGTC(c.SendChan, transactionID, user.DataVersion, user.Gtc)
 
 		// Send BLP
-		HandleSendBLP(c, transactionID, user.DataVersion, user.Blp)
+		HandleSendBLP(c.SendChan, transactionID, user.DataVersion, user.Blp)
 
 		// Send LST FL
-		HandleSendLST(c, transactionID, "FL", &user)
+		HandleSendLST(c.SendChan, transactionID, "FL", &user)
 		// Send LST AL
-		HandleSendLST(c, transactionID, "AL", &user)
+		HandleSendLST(c.SendChan, transactionID, "AL", &user)
 		// Send LST BL
-		HandleSendLST(c, transactionID, "BL", &user)
+		HandleSendLST(c.SendChan, transactionID, "BL", &user)
 		// Send LST RL
-		HandleSendLST(c, transactionID, "RL", &user)
+		HandleSendLST(c.SendChan, transactionID, "RL", &user)
 	}
 
 	return nil

@@ -14,15 +14,15 @@ import (
 
 var blockedWords = []string{"microsoft", "msn", "fuck"}
 
-func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) error {
+func HandleREA(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, tid, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -47,20 +47,20 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 
 	for _, word := range blockedWords {
 		if strings.Contains(strings.ToLower(newDisplayName), word) {
-			SendError(c, tid, ERR_INVALID_FRIENDLY_NAME)
+			SendError(c.SendChan, tid, ERR_INVALID_FRIENDLY_NAME)
 			return nil
 		}
 	}
 
 	var user database.User
-	query := db.First(&user, "email = ?", s.Email)
+	query := db.First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
 		return query.Error
 	}
 
-	if s.Email == email {
+	if c.Session.Email == email {
 		user.DisplayName = newDisplayName
 		user.DataVersion++
 		query = db.Save(&user)
@@ -69,9 +69,9 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		}
 
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.DisplayName)
-		c <- res
+		c.SendChan <- res
 
-		if err := HandleBatchNLN(db, clients, s); err != nil {
+		if err := HandleBatchNLN(db, clients, c); err != nil {
 			log.Println("Error:", err)
 		}
 
@@ -85,7 +85,7 @@ func HandleREA(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 		}
 
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, email, newDisplayName)
-		c <- res
+		c.SendChan <- res
 	}
 
 	return nil

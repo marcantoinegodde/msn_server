@@ -10,15 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleFND(c chan string, db *gorm.DB, s *clients.Session, args string) error {
+func HandleFND(db *gorm.DB, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, tid, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
 		return nil
 	}
 
@@ -56,7 +56,7 @@ func HandleFND(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 
 	// First and last name must be specified
 	if fname == "*" || lname == "*" {
-		SendError(c, tid, ERR_INVALID_PARAMETER)
+		SendError(c.SendChan, tid, ERR_INVALID_PARAMETER)
 		return nil
 	}
 
@@ -84,18 +84,18 @@ func HandleFND(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		return query.Error
 	}
 	if query.RowsAffected == 100 {
-		SendError(c, tid, ERR_TOO_MANY_RESULTS)
+		SendError(c.SendChan, tid, ERR_TOO_MANY_RESULTS)
 		return nil
 	}
 
 	if len(users) == 0 {
 		res := fmt.Sprintf("FND %s 0 0\r\n", tid)
-		c <- res
+		c.SendChan <- res
 	}
 	for i, user := range users {
 		res := fmt.Sprintf("FND %s %d %d fname=%s lname=%s city=%s state=%s country=%s\r\n",
 			tid, i+1, len(users), user.FirstName, user.LastName, user.City, user.State, user.Country)
-		c <- res
+		c.SendChan <- res
 	}
 
 	return nil

@@ -8,9 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleBatchFLN(db *gorm.DB, clients map[string]*clients.Client, s *clients.Session) error {
+func HandleBatchFLN(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client) error {
 	var user database.User
-	query := db.Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", s.Email)
+	query := db.Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", c.Session.Email)
 	if query.Error != nil {
 		return query.Error
 	}

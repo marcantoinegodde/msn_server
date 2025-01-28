@@ -29,15 +29,15 @@ var urlArgs = map[string]string{
 	"FOLDERS":  "/inbox http://127.0.0.1",
 	"MESSAGE":  "/message http://127.0.0.1"}
 
-func HandleURL(c chan string, s *clients.Session, args string) error {
+func HandleURL(c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, tid, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -56,11 +56,11 @@ func HandleURL(c chan string, s *clients.Session, args string) error {
 
 	url, ok := urlArgs[urlType]
 	if !ok {
-		SendError(c, tid, ERR_INVALID_PARAMETER)
+		SendError(c.SendChan, tid, ERR_INVALID_PARAMETER)
 		return fmt.Errorf("invalid URL type: %s", urlType)
 	}
 
 	res := fmt.Sprintf("URL %s %s\r\n", tid, url)
-	c <- res
+	c.SendChan <- res
 	return nil
 }

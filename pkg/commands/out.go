@@ -1,6 +1,8 @@
 package commands
 
-func HandleOUT(c chan string) {
+import "msnserver/pkg/clients"
+
+func HandleOUT(c *clients.Client) {
 	res := "OUT\r\n"
-	c <- res
+	c.SendChan <- res
 }

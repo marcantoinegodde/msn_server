@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"msnserver/pkg/clients"
 	"testing"
 )
 
@@ -15,7 +16,9 @@ func TestHandleINF(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		c := make(chan string, 1)
+		c := &clients.Client{
+			SendChan: make(chan string, 1),
+		}
 
 		err := HandleINF(c, tt.arguments)
 
@@ -25,7 +28,7 @@ func TestHandleINF(t *testing.T) {
 		}
 
 		if tt.expected != "" {
-			if got := <-c; got != tt.expected {
+			if got := <-c.SendChan; got != tt.expected {
 				t.Errorf("HandleINF(%q) = %q, want %q", tt.arguments, got, tt.expected)
 			}
 		}

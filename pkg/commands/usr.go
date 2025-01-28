@@ -11,15 +11,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleUSR(c chan string, db *gorm.DB, s *clients.Session, arguments string) error {
+func HandleUSR(db *gorm.DB, c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
 		return err
 	}
 
-	if s.Authenticated {
-		SendError(c, transactionID, ERR_ALREADY_LOGIN)
+	if c.Session.Authenticated {
+		SendError(c.SendChan, transactionID, ERR_ALREADY_LOGIN)
 		return nil
 	}
 
@@ -40,7 +40,7 @@ func HandleUSR(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 
 	switch authState {
 	case "I":
-		s.Email = splitArguments[2]
+		c.Session.Email = splitArguments[2]
 
 	case "S":
 		password = splitArguments[2]
@@ -51,9 +51,9 @@ func HandleUSR(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 	}
 
 	var user database.User
-	query := db.First(&user, "email = ?", s.Email)
+	query := db.First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		SendError(c, transactionID, ERR_AUTHENTICATION_FAILED)
+		SendError(c.SendChan, transactionID, ERR_AUTHENTICATION_FAILED)
 		return errors.New("user not found")
 	} else if query.Error != nil {
 		return query.Error
@@ -62,19 +62,19 @@ func HandleUSR(c chan string, db *gorm.DB, s *clients.Session, arguments string)
 	switch authState {
 	case "I":
 		res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, authMethod, "S", user.Salt)
-		c <- res
+		c.SendChan <- res
 		return nil
 
 	case "S":
 		if user.Password != password {
-			SendError(c, transactionID, ERR_AUTHENTICATION_FAILED)
+			SendError(c.SendChan, transactionID, ERR_AUTHENTICATION_FAILED)
 			return errors.New("invalid password")
 		}
 
-		s.Authenticated = true
+		c.Session.Authenticated = true
 
 		res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, "OK", user.Email, user.DisplayName)
-		c <- res
+		c.SendChan <- res
 		return nil
 
 	default:

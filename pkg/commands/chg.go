@@ -14,7 +14,7 @@ import (
 
 var statusCodes = []string{"NLN", "FLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN"}
 
-func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[string]*clients.Client, args string) error {
+func HandleCHG(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -22,8 +22,8 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	}
 	args, _, _ = strings.Cut(args, " ") // Remove the trailing space sent for this command
 
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -33,7 +33,7 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 
 	// Perform nested preloading to load users lists of contacts on user's forward list
 	var user database.User
-	query := db.Preload("ForwardList.ForwardList").Preload("ForwardList.AllowList").Preload("ForwardList.BlockList").Preload("ReverseList").First(&user, "email = ?", s.Email)
+	query := db.Preload("ForwardList.ForwardList").Preload("ForwardList.AllowList").Preload("ForwardList.BlockList").Preload("ReverseList").First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -47,11 +47,11 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 	}
 
 	res := fmt.Sprintf("CHG %s %s\r\n", transactionID, user.Status)
-	c <- res
+	c.SendChan <- res
 
 	// Receive ILN on first CHG
-	if !s.InitialPresenceNotification {
-		s.InitialPresenceNotification = true
+	if !c.Session.InitialPresenceNotification {
+		c.Session.InitialPresenceNotification = true
 
 		for _, contact := range user.ForwardList {
 			// Skip contacts that are offline or hidden
@@ -70,17 +70,17 @@ func HandleCHG(c chan string, db *gorm.DB, s *clients.Session, clients map[strin
 			}
 
 			// Send initial presence notification
-			HandleSendILN(c, transactionID, contact.Status, contact.Email, contact.DisplayName)
+			HandleSendILN(c.SendChan, transactionID, contact.Status, contact.Email, contact.DisplayName)
 		}
 	}
 
 	// Inform followers (RL) of the status change
 	if user.Status == "HDN" {
-		if err := HandleBatchFLN(db, clients, s); err != nil {
+		if err := HandleBatchFLN(db, clients, c); err != nil {
 			log.Println("Error:", err)
 		}
 	} else {
-		if err := HandleBatchNLN(db, clients, s); err != nil {
+		if err := HandleBatchNLN(db, clients, c); err != nil {
 			log.Println("Error:", err)
 		}
 	}

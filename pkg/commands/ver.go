@@ -3,12 +3,13 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"msnserver/pkg/clients"
 	"strings"
 )
 
 var supportedProtocols = []string{"MSNP2", "CVR0"}
 
-func HandleVER(c chan string, arguments string) error {
+func HandleVER(c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
@@ -27,11 +28,11 @@ func HandleVER(c chan string, arguments string) error {
 
 	if len(serverProtocols) < 2 {
 		res := fmt.Sprintf("VER %s %s\r\n", transactionID, "0")
-		c <- res
+		c.SendChan <- res
 		return errors.New("protocol mismatch")
 	}
 
 	res := fmt.Sprintf("VER %s %s\r\n", transactionID, strings.Join(serverProtocols, " "))
-	c <- res
+	c.SendChan <- res
 	return nil
 }

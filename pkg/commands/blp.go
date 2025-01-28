@@ -13,15 +13,15 @@ import (
 
 var blpMode = []string{"AL", "BL"}
 
-func HandleBLP(c chan string, db *gorm.DB, s *clients.Session, args string) error {
+func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	if !s.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+	if !c.Session.Authenticated {
+		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -30,7 +30,7 @@ func HandleBLP(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 	}
 
 	var user database.User
-	query := db.First(&user, "email = ?", s.Email)
+	query := db.First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -38,7 +38,7 @@ func HandleBLP(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 	}
 
 	if user.Blp == args {
-		SendError(c, transactionID, ERR_ALREADY_IN_THE_MODE)
+		SendError(c.SendChan, transactionID, ERR_ALREADY_IN_THE_MODE)
 		return errors.New("user already in requested mode")
 	}
 
@@ -49,7 +49,7 @@ func HandleBLP(c chan string, db *gorm.DB, s *clients.Session, args string) erro
 		return query.Error
 	}
 
-	HandleSendBLP(c, transactionID, user.DataVersion, user.Blp)
+	HandleSendBLP(c.SendChan, transactionID, user.DataVersion, user.Blp)
 	return nil
 }
 
