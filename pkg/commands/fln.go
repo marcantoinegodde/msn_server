@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
-func HandleBatchFLN(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client) error {
+func HandleBatchFLN(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client) error {
 	var user database.User
 	query := db.Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", c.Session.Email)
 	if query.Error != nil {
@@ -20,10 +21,6 @@ func HandleBatchFLN(db *gorm.DB, clients map[string]*clients.Client, c *clients.
 			continue
 		}
 
-		if clients[contact.Email] == nil {
-			continue
-		}
-
 		if isMember(user.BlockList, contact) {
 			continue
 		}
@@ -32,7 +29,14 @@ func HandleBatchFLN(db *gorm.DB, clients map[string]*clients.Client, c *clients.
 			continue
 		}
 
-		HandleSendFLN(clients[contact.Email].SendChan, user.Email)
+		m.Lock()
+		contactClient, ok := clients[contact.Email]
+		if !ok {
+			continue
+		}
+
+		HandleSendFLN(contactClient.SendChan, user.Email)
+		m.Unlock()
 	}
 
 	return nil

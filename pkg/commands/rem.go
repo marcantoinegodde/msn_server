@@ -7,11 +7,12 @@ import (
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
 	"strings"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
-func HandleREM(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
+func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -73,10 +74,13 @@ func HandleREM(db *gorm.DB, clients map[string]*clients.Client, c *clients.Clien
 		}
 
 		// Notify principal if online
-		if clients[principal.Email] != nil {
+		m.Lock()
+		principalClient, ok := clients[principal.Email]
+		if ok {
 			res := fmt.Sprintf("REM %s %s %d %s\r\n", "0", "RL", principal.DataVersion, user.Email)
-			clients[principal.Email].SendChan <- res
+			principalClient.SendChan <- res
 		}
+		m.Unlock()
 
 	case "AL":
 		// Find principal to remove from allow list

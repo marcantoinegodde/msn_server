@@ -8,11 +8,12 @@ import (
 	"msnserver/pkg/database"
 	"regexp"
 	"strings"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
-func HandleADD(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
+func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -92,10 +93,13 @@ func HandleADD(db *gorm.DB, clients map[string]*clients.Client, c *clients.Clien
 		}
 
 		// Notify principal if online
-		if clients[principal.Email] != nil {
+		m.Lock()
+		principalClient, ok := clients[principal.Email]
+		if ok {
 			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", "RL", principal.DataVersion, user.Email, user.DisplayName)
-			clients[principal.Email].SendChan <- res
+			principalClient.SendChan <- res
 		}
+		m.Unlock()
 
 		// Notify user if online, not blocked and explicitely allowed if BLP is BL
 		if !(principal.Status == "FLN" || principal.Status == "HDN") &&
@@ -124,7 +128,13 @@ func HandleADD(db *gorm.DB, clients map[string]*clients.Client, c *clients.Clien
 			return err
 		}
 
-		HandleSendNLN(clients[principal.Email].SendChan, user.Status, user.Email, user.DisplayName)
+		// Notify principal if online
+		m.Lock()
+		principalClient, ok := clients[principal.Email]
+		if ok {
+			HandleSendNLN(principalClient.SendChan, user.Status, user.Email, user.DisplayName)
+		}
+		m.Unlock()
 
 	case "BL":
 		if len(user.BlockList) >= 150 {
@@ -146,7 +156,13 @@ func HandleADD(db *gorm.DB, clients map[string]*clients.Client, c *clients.Clien
 			return err
 		}
 
-		HandleSendFLN(clients[principal.Email].SendChan, user.Email)
+		// Notify principal if online
+		m.Lock()
+		principalClient, ok := clients[principal.Email]
+		if ok {
+			HandleSendFLN(principalClient.SendChan, user.Email)
+		}
+		m.Unlock()
 
 	case "RL":
 		// User cannot modify reverse list

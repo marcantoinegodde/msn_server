@@ -16,7 +16,7 @@ import (
 type NotificationServer struct {
 	db      *gorm.DB
 	config  *config.MSNServerConfiguration
-	m       sync.Mutex
+	m       *sync.Mutex
 	clients map[string]*clients.Client
 }
 
@@ -24,7 +24,7 @@ func NewNotificationServer(db *gorm.DB, c *config.MSNServerConfiguration) *Notif
 	return &NotificationServer{
 		db:      db,
 		config:  c,
-		m:       sync.Mutex{},
+		m:       &sync.Mutex{},
 		clients: map[string]*clients.Client{},
 	}
 }
@@ -67,7 +67,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 				ns.db.Save(&user)
 			}
 
-			if err := commands.HandleBatchFLN(ns.db, ns.clients, c); err != nil {
+			if err := commands.HandleBatchFLN(ns.db, ns.m, ns.clients, c); err != nil {
 				log.Println("Error:", err)
 			}
 
@@ -131,7 +131,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			}
 
 		case "CHG":
-			err := commands.HandleCHG(ns.db, ns.clients, c, arguments)
+			err := commands.HandleCHG(ns.db, ns.m, ns.clients, c, arguments)
 			if err != nil {
 				log.Println("Error:", err)
 				return
@@ -156,19 +156,19 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			}
 
 		case "ADD":
-			if err := commands.HandleADD(ns.db, ns.clients, c, arguments); err != nil {
+			if err := commands.HandleADD(ns.db, ns.m, ns.clients, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "REM":
-			if err := commands.HandleREM(ns.db, ns.clients, c, arguments); err != nil {
+			if err := commands.HandleREM(ns.db, ns.m, ns.clients, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
 
 		case "REA":
-			if err := commands.HandleREA(ns.db, ns.clients, c, arguments); err != nil {
+			if err := commands.HandleREA(ns.db, ns.m, ns.clients, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}

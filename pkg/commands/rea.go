@@ -8,13 +8,14 @@ import (
 	"msnserver/pkg/database"
 	"net/url"
 	"strings"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
 var blockedWords = []string{"microsoft", "msn", "fuck"}
 
-func HandleREA(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
+func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
@@ -71,7 +72,7 @@ func HandleREA(db *gorm.DB, clients map[string]*clients.Client, c *clients.Clien
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.DisplayName)
 		c.SendChan <- res
 
-		if err := HandleBatchNLN(db, clients, c); err != nil {
+		if err := HandleBatchNLN(db, m, clients, c); err != nil {
 			log.Println("Error:", err)
 		}
 

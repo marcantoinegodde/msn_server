@@ -8,13 +8,14 @@ import (
 	"msnserver/pkg/database"
 	"slices"
 	"strings"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
 var statusCodes = []string{"NLN", "FLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN"}
 
-func HandleCHG(db *gorm.DB, clients map[string]*clients.Client, c *clients.Client, args string) error {
+func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
 	if err != nil {
@@ -76,11 +77,11 @@ func HandleCHG(db *gorm.DB, clients map[string]*clients.Client, c *clients.Clien
 
 	// Inform followers (RL) of the status change
 	if user.Status == "HDN" {
-		if err := HandleBatchFLN(db, clients, c); err != nil {
+		if err := HandleBatchFLN(db, m, clients, c); err != nil {
 			log.Println("Error:", err)
 		}
 	} else {
-		if err := HandleBatchNLN(db, clients, c); err != nil {
+		if err := HandleBatchNLN(db, m, clients, c); err != nil {
 			log.Println("Error:", err)
 		}
 	}
