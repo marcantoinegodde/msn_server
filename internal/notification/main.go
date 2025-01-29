@@ -115,14 +115,10 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			}
 
 		case "USR":
-			if err := commands.HandleUSR(ns.db, c, arguments); err != nil {
+			if err := commands.HandleUSR(ns.db, ns.m, ns.clients, c, arguments); err != nil {
 				log.Println("Error:", err)
 				return
 			}
-
-			ns.m.Lock()
-			ns.clients[c.Session.Email] = c
-			ns.m.Unlock()
 
 		case "SYN":
 			if err := commands.HandleSYN(ns.db, c, arguments); err != nil {

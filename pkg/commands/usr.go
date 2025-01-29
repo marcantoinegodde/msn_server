@@ -7,11 +7,12 @@ import (
 	"msnserver/pkg/database"
 	"slices"
 	"strings"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
-func HandleUSR(db *gorm.DB, c *clients.Client, arguments string) error {
+func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	transactionID, arguments, err := parseTransactionID(arguments)
 	if err != nil {
@@ -72,6 +73,10 @@ func HandleUSR(db *gorm.DB, c *clients.Client, arguments string) error {
 		}
 
 		c.Session.Authenticated = true
+
+		m.Lock()
+		clients[c.Session.Email] = c
+		m.Unlock()
 
 		res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, "OK", user.Email, user.DisplayName)
 		c.SendChan <- res
