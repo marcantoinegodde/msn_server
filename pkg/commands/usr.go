@@ -19,11 +19,13 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return err
 	}
 
+	// Reject already authenticated clients
 	if c.Session.Authenticated {
 		SendError(c.SendChan, transactionID, ERR_ALREADY_LOGIN)
 		return nil
 	}
 
+	// Parse arguments
 	splitArguments := strings.Fields(arguments)
 	if len(splitArguments) != 3 {
 		err := errors.New("invalid transaction")
@@ -34,6 +36,7 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	var authState = splitArguments[1]
 	var password string
 
+	// Validate authentication method
 	if !slices.Contains(supportedAuthMethods, authMethod) {
 		err := errors.New("unsupported authentication method")
 		return err
@@ -72,8 +75,10 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			return errors.New("invalid password")
 		}
 
+		// Update user status
 		c.Session.Authenticated = true
 
+		// Add client to clients map
 		m.Lock()
 		clients[c.Session.Email] = c
 		m.Unlock()
