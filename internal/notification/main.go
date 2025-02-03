@@ -37,7 +37,7 @@ func (ns *NotificationServer) Start() {
 
 	defer ln.Close()
 
-	log.Println("Listening on:", ns.config.NotificationServer.ServerAddr+":"+ns.config.NotificationServer.ServerPort)
+	log.Println("Listening on:", ln.Addr())
 
 	for {
 		conn, err := ln.Accept()

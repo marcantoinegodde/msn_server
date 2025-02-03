@@ -27,7 +27,7 @@ func (ds *DispatchServer) Start() {
 
 	defer ln.Close()
 
-	log.Println("Listening on:", ds.config.DispatchServer.ServerAddr+":"+ds.config.DispatchServer.ServerPort)
+	log.Println("Listening on:", ln.Addr())
 
 	for {
 		conn, err := ln.Accept()
