@@ -41,67 +41,51 @@ func (ds *DispatchServer) Start() {
 }
 
 func (ds *DispatchServer) handleConnection(conn net.Conn) {
-	c := &clients.Client{
-		Id:       conn.RemoteAddr().String(),
-		Conn:     conn,
-		SendChan: make(chan string),
-		Session:  &clients.Session{},
-	}
+	c := clients.NewClient(conn)
 
-	defer func() {
-		close(c.SendChan)
-		c.Wg.Wait()
-		conn.Close()
-		log.Println("Client disconnected:", conn.RemoteAddr())
-	}()
-
-	c.Wg.Add(1)
-	go c.SendHandler()
+	defer c.Disconnect()
 
 	for {
-		buffer := make([]byte, 1024)
-		_, err := conn.Read(buffer)
-		if err != nil {
-			return
-		}
+		select {
+		case msg := <-c.RecvChan:
+			command, arguments, found := strings.Cut(msg, " ")
+			if !found {
+				command, _, _ = strings.Cut(msg, "\r\n")
+			}
 
-		data := string(buffer)
-		log.Printf("[%s] <<< %s\n", c.Id, data)
+			switch command {
+			case "VER":
+				if err := commands.HandleVER(c, arguments); err != nil {
+					log.Println("Error:", err)
+					return
+				}
 
-		command, arguments, found := strings.Cut(data, " ")
-		if !found {
-			command, _, _ = strings.Cut(data, "\r\n")
-		}
+			case "INF":
+				if err := commands.HandleINF(c, arguments); err != nil {
+					log.Println("Error:", err)
+					return
+				}
 
-		switch command {
-		case "VER":
-			if err := commands.HandleVER(c, arguments); err != nil {
-				log.Println("Error:", err)
+			case "USR":
+				tid, err := commands.HandleUSRDispatch(arguments)
+				if err != nil {
+					log.Println("Error:", err)
+					return
+				}
+
+				commands.HandleXFR(ds.config.DispatchServer, c, tid)
+				return
+
+			case "OUT":
+				commands.HandleOUT(c, "")
+				return
+
+			default:
+				log.Println("Unknown command:", command)
 				return
 			}
 
-		case "INF":
-			if err := commands.HandleINF(c, arguments); err != nil {
-				log.Println("Error:", err)
-				return
-			}
-
-		case "USR":
-			tid, err := commands.HandleUSRDispatch(arguments)
-			if err != nil {
-				log.Println("Error:", err)
-				return
-			}
-
-			commands.HandleXFR(ds.config.DispatchServer, c, tid)
-			return
-
-		case "OUT":
-			commands.HandleOUT(c)
-			return
-
-		default:
-			log.Println("Unknown command:", command)
+		case <-c.DoneChan:
 			return
 		}
 	}

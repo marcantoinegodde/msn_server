@@ -78,8 +78,15 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		// Update user status
 		c.Session.Authenticated = true
 
-		// Add client to clients map
+		// Update client map, handle logout if user is already logged in
 		m.Lock()
+		if oldClient, ok := clients[c.Session.Email]; ok {
+			HandleOUT(oldClient, "OTH")
+			oldClient.DoneChan <- true
+			m.Unlock()
+			oldClient.Wg.Wait()
+			m.Lock()
+		}
 		clients[c.Session.Email] = c
 		m.Unlock()
 

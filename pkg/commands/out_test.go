@@ -6,14 +6,28 @@ import (
 )
 
 func TestHandleOUT(t *testing.T) {
-	c := &clients.Client{
-		SendChan: make(chan string),
+	tests := []struct {
+		name     string
+		reason   string
+		expected string
+	}{
+		{"Valid reason OTH", "OTH", "OUT OTH\r\n"},
+		{"Valid reason SSD", "SSD", "OUT SSD\r\n"},
+		{"Blanck reading", "", "OUT\r\n"},
+		{"Invalid reason", "INVALID", "OUT\r\n"},
 	}
-	expected := "OUT\r\n"
 
-	go HandleOUT(c)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &clients.Client{
+				SendChan: make(chan string, 1),
+			}
 
-	if got := <-c.SendChan; got != expected {
-		t.Errorf("HandleOUT() = %q, want %q", got, expected)
+			go HandleOUT(c, tt.reason)
+
+			if got := <-c.SendChan; got != tt.expected {
+				t.Errorf("HandleOUT() = %q, want %q", got, tt.expected)
+			}
+		})
 	}
 }
