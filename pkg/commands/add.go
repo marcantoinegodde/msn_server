@@ -13,6 +13,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	MAX_FORWARD_LIST_SIZE = 150
+)
+
 func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	transactionID, args, err := parseTransactionID(args)
@@ -66,7 +70,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 
 	switch listName {
 	case "FL":
-		if len(user.ForwardList) >= 150 {
+		if len(user.ForwardList) >= MAX_FORWARD_LIST_SIZE {
 			SendError(c.SendChan, transactionID, ERR_LIST_FULL)
 			log.Println("Error: forward list full")
 			return nil
@@ -109,12 +113,6 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		}
 
 	case "AL":
-		if len(user.AllowList) >= 150 {
-			SendError(c.SendChan, transactionID, ERR_LIST_FULL)
-			log.Println("Error: allow list full")
-			return nil
-		}
-
 		if isMember(user.BlockList, &principal) {
 			SendError(c.SendChan, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
@@ -137,12 +135,6 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		m.Unlock()
 
 	case "BL":
-		if len(user.BlockList) >= 150 {
-			SendError(c.SendChan, transactionID, ERR_LIST_FULL)
-			log.Println("Error: block list full")
-			return nil
-		}
-
 		if isMember(user.AllowList, &principal) {
 			SendError(c.SendChan, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
