@@ -7,6 +7,6 @@ import (
 )
 
 func HandleXFR(cf config.DispatchServer, c *clients.Client, transactionID string) {
-	res := fmt.Sprintf("XFR %s NS %s:%s 0 %s:%s\r\n", transactionID, cf.NotificationServerAddr, cf.NotificationServerPort, cf.ServerAddr, cf.ServerPort)
+	res := fmt.Sprintf("XFR %s NS %s:%s\r\n", transactionID, cf.NotificationServerAddr, cf.NotificationServerPort)
 	c.SendChan <- res
 }
