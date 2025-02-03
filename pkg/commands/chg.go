@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var statusCodes = []string{"NLN", "FLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN"}
+var statusCodes = []string{"NLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN"}
 
 func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
@@ -29,7 +29,8 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	if !slices.Contains(statusCodes, args) {
-		return fmt.Errorf("invalid status code: %s", args)
+		SendError(c.SendChan, transactionID, ERR_INVALID_PARAMETER)
+		return nil
 	}
 
 	// Perform nested preloading to load users lists of contacts on user's forward list
