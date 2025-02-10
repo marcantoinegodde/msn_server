@@ -1,6 +1,7 @@
 package dispatch
 
 import (
+	"fmt"
 	"log"
 	"msnserver/config"
 	"msnserver/pkg/clients"
@@ -20,7 +21,7 @@ func NewDispatchServer(c *config.MSNServerConfiguration) *DispatchServer {
 }
 
 func (ds *DispatchServer) Start() {
-	ln, err := net.Listen("tcp", ds.config.DispatchServer.ServerAddr+":"+ds.config.DispatchServer.ServerPort)
+	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", ds.config.DispatchServer.ServerAddr, ds.config.DispatchServer.ServerPort))
 	if err != nil {
 		log.Fatalln("Error starting server:", err)
 	}

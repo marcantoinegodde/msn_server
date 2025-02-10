@@ -16,7 +16,7 @@ type MSNServerConfiguration struct {
 
 type Database struct {
 	Host     string `mapstructure:"host"`
-	Port     string `mapstructure:"port"`
+	Port     int    `mapstructure:"port"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
 	DBName   string `mapstructure:"dbname"`
@@ -32,21 +32,21 @@ type Redis struct {
 
 type DispatchServer struct {
 	ServerAddr             string `mapstructure:"server_addr"`
-	ServerPort             string `mapstructure:"server_port"`
+	ServerPort             int    `mapstructure:"server_port"`
 	NotificationServerAddr string `mapstructure:"notification_server_addr"`
-	NotificationServerPort string `mapstructure:"notification_server_port"`
+	NotificationServerPort int    `mapstructure:"notification_server_port"`
 }
 
 type NotificationServer struct {
 	ServerAddr            string `mapstructure:"server_addr"`
-	ServerPort            string `mapstructure:"server_port"`
+	ServerPort            int    `mapstructure:"server_port"`
 	SwitchboardServerAddr string `mapstructure:"switchboard_server_addr"`
-	SwitchboardServerPort string `mapstructure:"switchboard_server_port"`
+	SwitchboardServerPort int    `mapstructure:"switchboard_server_port"`
 }
 
 type SwitchboardServer struct {
 	ServerAddr string `mapstructure:"server_addr"`
-	ServerPort string `mapstructure:"server_port"`
+	ServerPort int    `mapstructure:"server_port"`
 }
 
 func LoadConfig() (*MSNServerConfiguration, error) {

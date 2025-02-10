@@ -21,7 +21,7 @@ const (
 )
 
 func HandleXFRDispatch(cf config.DispatchServer, c *clients.Client, transactionID string) {
-	res := fmt.Sprintf("XFR %s NS %s:%s\r\n", transactionID, cf.NotificationServerAddr, cf.NotificationServerPort)
+	res := fmt.Sprintf("XFR %s NS %s:%d\r\n", transactionID, cf.NotificationServerAddr, cf.NotificationServerPort)
 	c.Send(res)
 }
 
@@ -58,7 +58,7 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 		return err
 	}
 
-	res := fmt.Sprintf("XFR %s SB %s:%s %s %s\r\n", tid, cf.SwitchboardServerAddr, cf.SwitchboardServerPort, SB_SECURITY_PACKAGE, cki)
+	res := fmt.Sprintf("XFR %s SB %s:%d %s %s\r\n", tid, cf.SwitchboardServerAddr, cf.SwitchboardServerPort, SB_SECURITY_PACKAGE, cki)
 	c.Send(res)
 
 	return nil

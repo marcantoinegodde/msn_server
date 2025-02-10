@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"fmt"
 	"log"
 	"msnserver/config"
 	"msnserver/pkg/clients"
@@ -33,7 +34,7 @@ func NewNotificationServer(db *gorm.DB, rdb *redis.Client, c *config.MSNServerCo
 }
 
 func (ns *NotificationServer) Start() {
-	ln, err := net.Listen("tcp", ns.config.NotificationServer.ServerAddr+":"+ns.config.NotificationServer.ServerPort)
+	ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", ns.config.NotificationServer.ServerAddr, ns.config.NotificationServer.ServerPort))
 	if err != nil {
 		log.Fatalln("Error starting server:", err)
 	}
