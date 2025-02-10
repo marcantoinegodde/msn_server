@@ -6,7 +6,7 @@ import (
 	"log"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
-	"regexp"
+	"msnserver/pkg/utils"
 	"strings"
 	"sync"
 
@@ -38,7 +38,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	email := splitArguments[1]
 	displayName := splitArguments[2]
 
-	if !isValidEmail(email) {
+	if !utils.IsValidEmail(email) {
 		SendError(c.SendChan, transactionID, ERR_INVALID_PARAMETER)
 		log.Printf("Error: invalid email: %s\n", email)
 		return nil
@@ -170,10 +170,4 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	c.SendChan <- res
 
 	return nil
-}
-
-func isValidEmail(email string) bool {
-	const emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	re := regexp.MustCompile(emailRegex)
-	return re.MatchString(email)
 }
