@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	recommendedVersion = "1.0.0863"
-	minimumVersion     = "1.0.0863"
-	downloadURL        = "http://messenger.hotmail.com/mmsetup.exe"
-	infoURL            = "http://messenger.hotmail.com"
+	recommendedVersion string = "1.0.0863"
+	minimumVersion     string = "1.0.0863"
+	downloadURL        string = "http://messenger.hotmail.com/mmsetup.exe"
+	infoURL            string = "http://messenger.hotmail.com"
 )
 
 func HandleCVR(c *clients.Client, args string) error {

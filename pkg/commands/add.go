@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	MAX_FORWARD_LIST_SIZE = 150
+	MAX_FORWARD_LIST_SIZE int = 150
 )
 
 func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
