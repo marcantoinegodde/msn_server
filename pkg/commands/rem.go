@@ -20,7 +20,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -46,7 +46,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("ForwardList").Find(&principal)
 		if err != nil {
-			SendError(c.SendChan, transactionID, ERR_NOT_ON_LIST)
+			SendError(c, transactionID, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -78,7 +78,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		principalClient, ok := clients[principal.Email]
 		if ok {
 			res := fmt.Sprintf("REM %s %s %d %s\r\n", "0", "RL", principal.DataVersion, user.Email)
-			principalClient.SendChan <- res
+			principalClient.Send(res)
 		}
 		m.Unlock()
 
@@ -87,7 +87,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("AllowList").Find(&principal)
 		if err != nil {
-			SendError(c.SendChan, transactionID, ERR_NOT_ON_LIST)
+			SendError(c, transactionID, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -108,7 +108,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("BlockList").Find(&principal)
 		if err != nil {
-			SendError(c.SendChan, transactionID, ERR_NOT_ON_LIST)
+			SendError(c, transactionID, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -135,7 +135,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	res := fmt.Sprintf("REM %s %s %d %s\r\n", transactionID, listName, user.DataVersion, email)
-	c.SendChan <- res
+	c.Send(res)
 
 	return nil
 }

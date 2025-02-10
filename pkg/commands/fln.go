@@ -35,14 +35,14 @@ func HandleBatchFLN(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Clie
 			continue
 		}
 
-		HandleSendFLN(contactClient.SendChan, user.Email)
+		HandleSendFLN(contactClient, user.Email)
 		m.Unlock()
 	}
 
 	return nil
 }
 
-func HandleSendFLN(c chan string, email string) {
+func HandleSendFLN(c *clients.Client, email string) {
 	res := fmt.Sprintf("FLN %s\r\n", email)
-	c <- res
+	c.Send(res)
 }

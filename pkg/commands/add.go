@@ -25,7 +25,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -39,13 +39,13 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	displayName := splitArguments[2]
 
 	if !utils.IsValidEmail(email) {
-		SendError(c.SendChan, transactionID, ERR_INVALID_PARAMETER)
+		SendError(c, transactionID, ERR_INVALID_PARAMETER)
 		log.Printf("Error: invalid email: %s\n", email)
 		return nil
 	}
 
 	if c.Session.Email == email {
-		SendError(c.SendChan, transactionID, ERR_INVALID_USER)
+		SendError(c, transactionID, ERR_INVALID_USER)
 		log.Println("Error: tried to add self to list")
 		return nil
 	}
@@ -61,7 +61,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	var principal database.User
 	query = db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").First(&principal, "email = ?", email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		SendError(c.SendChan, transactionID, ERR_INVALID_USER)
+		SendError(c, transactionID, ERR_INVALID_USER)
 		log.Printf("Error: user not found: %s\n", email)
 		return nil
 	} else if query.Error != nil {
@@ -71,13 +71,13 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	switch listName {
 	case "FL":
 		if len(user.ForwardList) >= MAX_FORWARD_LIST_SIZE {
-			SendError(c.SendChan, transactionID, ERR_LIST_FULL)
+			SendError(c, transactionID, ERR_LIST_FULL)
 			log.Println("Error: forward list full")
 			return nil
 		}
 
 		if isMember(user.ForwardList, &principal) {
-			SendError(c.SendChan, transactionID, ERR_ALREADY_THERE)
+			SendError(c, transactionID, ERR_ALREADY_THERE)
 			log.Println("Error: user already in forward list")
 			return nil
 		}
@@ -101,7 +101,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		principalClient, ok := clients[principal.Email]
 		if ok {
 			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", "RL", principal.DataVersion, user.Email, user.DisplayName)
-			principalClient.SendChan <- res
+			principalClient.Send(res)
 		}
 		m.Unlock()
 
@@ -109,12 +109,12 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		if !(principal.Status == "FLN" || principal.Status == "HDN") &&
 			!isMember(principal.BlockList, &user) &&
 			!(principal.Blp == "BL" && !isMember(principal.AllowList, &user)) {
-			HandleSendILN(c.SendChan, transactionID, principal.Status, principal.Email, principal.DisplayName)
+			HandleSendILN(c, transactionID, principal.Status, principal.Email, principal.DisplayName)
 		}
 
 	case "AL":
 		if isMember(user.BlockList, &principal) {
-			SendError(c.SendChan, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
+			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
 			return nil
 		}
@@ -130,13 +130,13 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		m.Lock()
 		principalClient, ok := clients[principal.Email]
 		if ok {
-			HandleSendNLN(principalClient.SendChan, user.Status, user.Email, user.DisplayName)
+			HandleSendNLN(principalClient, user.Status, user.Email, user.DisplayName)
 		}
 		m.Unlock()
 
 	case "BL":
 		if isMember(user.AllowList, &principal) {
-			SendError(c.SendChan, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
+			SendError(c, transactionID, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
 			return nil
 		}
@@ -152,7 +152,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		m.Lock()
 		principalClient, ok := clients[principal.Email]
 		if ok {
-			HandleSendFLN(principalClient.SendChan, user.Email)
+			HandleSendFLN(principalClient, user.Email)
 		}
 		m.Unlock()
 
@@ -167,7 +167,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", transactionID, listName, user.DataVersion, email, displayName)
-	c.SendChan <- res
+	c.Send(res)
 
 	return nil
 }

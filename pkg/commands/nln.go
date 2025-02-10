@@ -35,14 +35,14 @@ func HandleBatchNLN(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Clie
 			continue
 		}
 
-		HandleSendNLN(contactClient.SendChan, user.Status, user.Email, user.DisplayName)
+		HandleSendNLN(contactClient, user.Status, user.Email, user.DisplayName)
 		m.Unlock()
 	}
 
 	return nil
 }
 
-func HandleSendNLN(c chan string, status string, email string, name string) {
+func HandleSendNLN(c *clients.Client, status string, email string, name string) {
 	res := fmt.Sprintf("NLN %s %s %s\r\n", status, email, name)
-	c <- res
+	c.Send(res)
 }

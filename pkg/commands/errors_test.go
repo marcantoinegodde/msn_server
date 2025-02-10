@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"msnserver/pkg/clients"
 	"testing"
 )
 
@@ -16,11 +17,13 @@ func TestSendError(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		c := make(chan string)
+		c := &clients.Client{
+			SendChan: make(chan string),
+		}
 
 		go SendError(c, tt.transactionID, tt.errorCode)
 
-		if got := <-c; got != tt.expected {
+		if got := <-c.SendChan; got != tt.expected {
 			t.Errorf("expected %q, got %q", tt.expected, got)
 		}
 	}

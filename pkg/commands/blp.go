@@ -21,7 +21,7 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -38,7 +38,7 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 	}
 
 	if user.Blp == args {
-		SendError(c.SendChan, transactionID, ERR_ALREADY_IN_THE_MODE)
+		SendError(c, transactionID, ERR_ALREADY_IN_THE_MODE)
 		return errors.New("user already in requested mode")
 	}
 
@@ -49,11 +49,11 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 		return query.Error
 	}
 
-	HandleSendBLP(c.SendChan, transactionID, user.DataVersion, user.Blp)
+	HandleSendBLP(c, transactionID, user.DataVersion, user.Blp)
 	return nil
 }
 
-func HandleSendBLP(c chan string, tid string, version uint32, blp string) {
+func HandleSendBLP(c *clients.Client, tid string, version uint32, blp string) {
 	res := fmt.Sprintf("BLP %s %d %s\r\n", tid, version, blp)
-	c <- res
+	c.Send(res)
 }

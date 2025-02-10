@@ -24,12 +24,12 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	args, _, _ = strings.Cut(args, " ") // Remove the trailing space sent for this command
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
 	if !slices.Contains(statusCodes, args) {
-		SendError(c.SendChan, transactionID, ERR_INVALID_PARAMETER)
+		SendError(c, transactionID, ERR_INVALID_PARAMETER)
 		return nil
 	}
 
@@ -49,7 +49,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	res := fmt.Sprintf("CHG %s %s\r\n", transactionID, user.Status)
-	c.SendChan <- res
+	c.Send(res)
 
 	// Receive ILN on first CHG
 	if !c.Session.InitialPresenceNotification {
@@ -72,7 +72,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			}
 
 			// Send initial presence notification
-			HandleSendILN(c.SendChan, transactionID, contact.Status, contact.Email, contact.DisplayName)
+			HandleSendILN(c, transactionID, contact.Status, contact.Email, contact.DisplayName)
 		}
 	}
 

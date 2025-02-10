@@ -23,7 +23,7 @@ func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -48,7 +48,7 @@ func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 
 	for _, word := range blockedWords {
 		if strings.Contains(strings.ToLower(newDisplayName), word) {
-			SendError(c.SendChan, tid, ERR_INVALID_FRIENDLY_NAME)
+			SendError(c, tid, ERR_INVALID_FRIENDLY_NAME)
 			return nil
 		}
 	}
@@ -70,7 +70,7 @@ func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		}
 
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.DisplayName)
-		c.SendChan <- res
+		c.Send(res)
 
 		if err := HandleBatchNLN(db, m, clients, c); err != nil {
 			log.Println("Error:", err)
@@ -86,7 +86,7 @@ func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		}
 
 		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, email, newDisplayName)
-		c.SendChan <- res
+		c.Send(res)
 	}
 
 	return nil

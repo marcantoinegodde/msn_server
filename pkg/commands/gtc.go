@@ -21,7 +21,7 @@ func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -38,7 +38,7 @@ func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 	}
 
 	if user.Gtc == args {
-		SendError(c.SendChan, transactionID, ERR_ALREADY_IN_THE_MODE)
+		SendError(c, transactionID, ERR_ALREADY_IN_THE_MODE)
 		return errors.New("user already in requested mode")
 	}
 
@@ -49,11 +49,11 @@ func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 		return query.Error
 	}
 
-	HandleSendGTC(c.SendChan, transactionID, user.DataVersion, user.Gtc)
+	HandleSendGTC(c, transactionID, user.DataVersion, user.Gtc)
 	return nil
 }
 
-func HandleSendGTC(c chan string, tid string, version uint32, gtc string) {
+func HandleSendGTC(c *clients.Client, tid string, version uint32, gtc string) {
 	res := fmt.Sprintf("GTC %s %d %s\r\n", tid, version, gtc)
-	c <- res
+	c.Send(res)
 }

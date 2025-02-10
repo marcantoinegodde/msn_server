@@ -21,7 +21,7 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 
 	// Reject already authenticated clients
 	if c.Session.Authenticated {
-		SendError(c.SendChan, transactionID, ERR_ALREADY_LOGIN)
+		SendError(c, transactionID, ERR_ALREADY_LOGIN)
 		return nil
 	}
 
@@ -57,7 +57,7 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	var user database.User
 	query := db.First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
-		SendError(c.SendChan, transactionID, ERR_AUTHENTICATION_FAILED)
+		SendError(c, transactionID, ERR_AUTHENTICATION_FAILED)
 		return errors.New("user not found")
 	} else if query.Error != nil {
 		return query.Error
@@ -66,12 +66,12 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	switch authState {
 	case "I":
 		res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, authMethod, "S", user.Salt)
-		c.SendChan <- res
+		c.Send(res)
 		return nil
 
 	case "S":
 		if user.Password != password {
-			SendError(c.SendChan, transactionID, ERR_AUTHENTICATION_FAILED)
+			SendError(c, transactionID, ERR_AUTHENTICATION_FAILED)
 			return errors.New("invalid password")
 		}
 
@@ -91,7 +91,7 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		m.Unlock()
 
 		res := fmt.Sprintf("USR %s %s %s %s\r\n", transactionID, "OK", user.Email, user.DisplayName)
-		c.SendChan <- res
+		c.Send(res)
 		return nil
 
 	default:

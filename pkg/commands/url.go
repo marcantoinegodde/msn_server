@@ -37,7 +37,7 @@ func HandleURL(c *clients.Client, args string) error {
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -56,11 +56,11 @@ func HandleURL(c *clients.Client, args string) error {
 
 	url, ok := urlArgs[urlType]
 	if !ok {
-		SendError(c.SendChan, tid, ERR_INVALID_PARAMETER)
+		SendError(c, tid, ERR_INVALID_PARAMETER)
 		return fmt.Errorf("invalid URL type: %s", urlType)
 	}
 
 	res := fmt.Sprintf("URL %s %s\r\n", tid, url)
-	c.SendChan <- res
+	c.Send(res)
 	return nil
 }

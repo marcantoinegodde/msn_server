@@ -22,7 +22,7 @@ const (
 
 func HandleXFRDispatch(cf config.DispatchServer, c *clients.Client, transactionID string) {
 	res := fmt.Sprintf("XFR %s NS %s:%s\r\n", transactionID, cf.NotificationServerAddr, cf.NotificationServerPort)
-	c.SendChan <- res
+	c.Send(res)
 }
 
 func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *clients.Client, arguments string) error {
@@ -33,12 +33,12 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
 	if arguments != "SB" {
-		SendError(c.SendChan, tid, ERR_INVALID_PARAMETER)
+		SendError(c, tid, ERR_INVALID_PARAMETER)
 		return errors.New("invalid parameter")
 	}
 
@@ -49,7 +49,7 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 	}
 
 	if user.Status == "HDN" {
-		SendError(c.SendChan, tid, ERR_NOT_ALLOWED_WHEN_OFFLINE)
+		SendError(c, tid, ERR_NOT_ALLOWED_WHEN_OFFLINE)
 		return nil
 	}
 

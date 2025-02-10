@@ -15,12 +15,12 @@ func HandleSND(c *clients.Client, args string) error {
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
 	// We don't send any email, just ack the transaction
 	res := fmt.Sprintf("SND %s OK\r\n", tid)
-	c.SendChan <- res
+	c.Send(res)
 	return nil
 }

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"msnserver/pkg/clients"
 )
 
 const (
@@ -52,7 +53,7 @@ const (
 	ERR_PASSPORT_NOT_VERIFIED    int = 924
 )
 
-func SendError(c chan string, transactionID string, errorCode int) {
+func SendError(c *clients.Client, transactionID string, errorCode int) {
 	res := fmt.Sprintf("%d %s\r\n", errorCode, transactionID)
-	c <- res
+	c.Send(res)
 }

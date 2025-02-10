@@ -28,11 +28,11 @@ func HandleVER(c *clients.Client, arguments string) error {
 
 	if len(serverProtocols) < 2 {
 		res := fmt.Sprintf("VER %s %s\r\n", transactionID, "0")
-		c.SendChan <- res
+		c.Send(res)
 		return errors.New("protocol mismatch")
 	}
 
 	res := fmt.Sprintf("VER %s %s\r\n", transactionID, strings.Join(serverProtocols, " "))
-	c.SendChan <- res
+	c.Send(res)
 	return nil
 }

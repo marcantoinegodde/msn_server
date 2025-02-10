@@ -16,6 +16,6 @@ func HandleINF(c *clients.Client, arguments string) error {
 	}
 
 	res := fmt.Sprintf("INF %s %s\r\n", transactionID, strings.Join(supportedAuthMethods, " "))
-	c.SendChan <- res
+	c.Send(res)
 	return nil
 }

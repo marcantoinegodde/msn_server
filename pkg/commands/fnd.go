@@ -18,7 +18,7 @@ func HandleFND(db *gorm.DB, c *clients.Client, args string) error {
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c.SendChan, tid, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return nil
 	}
 
@@ -56,7 +56,7 @@ func HandleFND(db *gorm.DB, c *clients.Client, args string) error {
 
 	// First and last name must be specified
 	if fname == "*" || lname == "*" {
-		SendError(c.SendChan, tid, ERR_INVALID_PARAMETER)
+		SendError(c, tid, ERR_INVALID_PARAMETER)
 		return nil
 	}
 
@@ -84,18 +84,18 @@ func HandleFND(db *gorm.DB, c *clients.Client, args string) error {
 		return query.Error
 	}
 	if query.RowsAffected == 100 {
-		SendError(c.SendChan, tid, ERR_TOO_MANY_RESULTS)
+		SendError(c, tid, ERR_TOO_MANY_RESULTS)
 		return nil
 	}
 
 	if len(users) == 0 {
 		res := fmt.Sprintf("FND %s 0 0\r\n", tid)
-		c.SendChan <- res
+		c.Send(res)
 	}
 	for i, user := range users {
 		res := fmt.Sprintf("FND %s %d %d fname=%s lname=%s city=%s state=%s country=%s\r\n",
 			tid, i+1, len(users), user.FirstName, user.LastName, user.City, user.State, user.Country)
-		c.SendChan <- res
+		c.Send(res)
 	}
 
 	return nil

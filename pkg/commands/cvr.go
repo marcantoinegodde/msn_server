@@ -21,6 +21,6 @@ func HandleCVR(c *clients.Client, args string) error {
 	}
 
 	res := fmt.Sprintf("CVR %s %s %s %s %s %s\r\n", transactionID, recommendedVersion, recommendedVersion, minimumVersion, downloadURL, infoURL)
-	c.SendChan <- res
+	c.Send(res)
 	return nil
 }
