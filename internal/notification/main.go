@@ -10,19 +10,22 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type NotificationServer struct {
 	db      *gorm.DB
+	rdb     *redis.Client
 	config  *config.MSNServerConfiguration
 	m       *sync.Mutex
 	clients map[string]*clients.Client
 }
 
-func NewNotificationServer(db *gorm.DB, c *config.MSNServerConfiguration) *NotificationServer {
+func NewNotificationServer(db *gorm.DB, rdb *redis.Client, c *config.MSNServerConfiguration) *NotificationServer {
 	return &NotificationServer{
 		db:      db,
+		rdb:     rdb,
 		config:  c,
 		m:       &sync.Mutex{},
 		clients: map[string]*clients.Client{},

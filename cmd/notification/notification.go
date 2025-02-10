@@ -5,6 +5,7 @@ import (
 	"msnserver/config"
 	"msnserver/internal/notification"
 	"msnserver/pkg/database"
+	"msnserver/pkg/redis"
 )
 
 func main() {
@@ -20,6 +21,11 @@ func main() {
 		log.Fatalln("Error loading database:", err)
 	}
 
-	ns := notification.NewNotificationServer(db, c)
+	rdb, err := redis.NewRedisClient(c.Redis)
+	if err != nil {
+		log.Fatalln("Error loading redis:", err)
+	}
+
+	ns := notification.NewNotificationServer(db, rdb, c)
 	ns.Start()
 }
