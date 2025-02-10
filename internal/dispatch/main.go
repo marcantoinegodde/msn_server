@@ -73,7 +73,7 @@ func (ds *DispatchServer) handleConnection(conn net.Conn) {
 					return
 				}
 
-				commands.HandleXFR(ds.config.DispatchServer, c, tid)
+				commands.HandleXFRDispatch(ds.config.DispatchServer, c, tid)
 				return
 
 			case "OUT":

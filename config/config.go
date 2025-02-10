@@ -11,6 +11,7 @@ type MSNServerConfiguration struct {
 	Redis              Redis              `mapstructure:"redis"`
 	DispatchServer     DispatchServer     `mapstructure:"dispatch_server"`
 	NotificationServer NotificationServer `mapstructure:"notification_server"`
+	SwitchboardServer  SwitchboardServer  `mapstructure:"switchboard_server"`
 }
 
 type Database struct {
@@ -37,6 +38,13 @@ type DispatchServer struct {
 }
 
 type NotificationServer struct {
+	ServerAddr            string `mapstructure:"server_addr"`
+	ServerPort            string `mapstructure:"server_port"`
+	SwitchboardServerAddr string `mapstructure:"switchboard_server_addr"`
+	SwitchboardServerPort string `mapstructure:"switchboard_server_port"`
+}
+
+type SwitchboardServer struct {
 	ServerAddr string `mapstructure:"server_addr"`
 	ServerPort string `mapstructure:"server_port"`
 }

@@ -171,6 +171,12 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 					return
 				}
 
+			case "XFR":
+				if err := commands.HandleXFR(ns.config.NotificationServer, ns.db, ns.rdb, c, arguments); err != nil {
+					log.Println("Error:", err)
+					return
+				}
+
 			case "OUT":
 				commands.HandleOUT(c, "")
 				return

@@ -100,6 +100,12 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 }
 
+/*
+For now, we just return the tid without actually parsing the USR command
+sent by the user. This could be improved later if we need to associate
+a user account to a specific NS.
+*/
+
 func HandleUSRDispatch(arguments string) (string, error) {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	tid, _, err := parseTransactionID(arguments)
