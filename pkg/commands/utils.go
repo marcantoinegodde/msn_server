@@ -2,28 +2,21 @@ package commands
 
 import (
 	"errors"
-	"math"
 	"msnserver/pkg/database"
 	"strconv"
 	"strings"
 )
 
-func parseTransactionID(arguments string) (string, string, error) {
-	transactionID, arguments, _ := strings.Cut(arguments, " ")
+func parseTransactionID(arguments string) (uint32, string, error) {
+	rawTid, arguments, _ := strings.Cut(arguments, " ")
 
-	parsedTransactionID, err := strconv.Atoi(transactionID)
+	parsedTid, err := strconv.ParseUint(rawTid, 10, 32)
 	if err != nil {
-		return "", "", errors.New("invalid transaction ID")
+		return 0, "", errors.New("invalid transaction ID")
 	}
+	tid := uint32(parsedTid)
 
-	if parsedTransactionID < 0 {
-		return "", "", errors.New("invalid transaction ID")
-	}
-	if parsedTransactionID > (int(math.Pow(2, 32)) - 1) {
-		return "", "", errors.New("invalid transaction ID")
-	}
-
-	return transactionID, arguments, nil
+	return tid, arguments, nil
 }
 
 func isMember(userList []*database.User, principal *database.User) bool {

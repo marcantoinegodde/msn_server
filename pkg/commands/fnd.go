@@ -89,11 +89,11 @@ func HandleFND(db *gorm.DB, c *clients.Client, args string) error {
 	}
 
 	if len(users) == 0 {
-		res := fmt.Sprintf("FND %s 0 0\r\n", tid)
+		res := fmt.Sprintf("FND %d 0 0\r\n", tid)
 		c.Send(res)
 	}
 	for i, user := range users {
-		res := fmt.Sprintf("FND %s %d %d fname=%s lname=%s city=%s state=%s country=%s\r\n",
+		res := fmt.Sprintf("FND %d %d %d fname=%s lname=%s city=%s state=%s country=%s\r\n",
 			tid, i+1, len(users), user.FirstName, user.LastName, user.City, user.State, user.Country)
 		c.Send(res)
 	}

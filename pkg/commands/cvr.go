@@ -15,12 +15,12 @@ const (
 
 func HandleCVR(c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
-	transactionID, _, err := parseTransactionID(args)
+	tid, _, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
-	res := fmt.Sprintf("CVR %s %s %s %s %s %s\r\n", transactionID, recommendedVersion, recommendedVersion, minimumVersion, downloadURL, infoURL)
+	res := fmt.Sprintf("CVR %d %s %s %s %s %s\r\n", tid, recommendedVersion, recommendedVersion, minimumVersion, downloadURL, infoURL)
 	c.Send(res)
 	return nil
 }

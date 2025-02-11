@@ -13,13 +13,13 @@ import (
 
 func HandleSYN(db *gorm.DB, c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	transactionID, arguments, err := parseTransactionID(arguments)
+	tid, arguments, err := parseTransactionID(arguments)
 	if err != nil {
 		return err
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -36,26 +36,26 @@ func HandleSYN(db *gorm.DB, c *clients.Client, arguments string) error {
 		return query.Error
 	}
 
-	res := fmt.Sprintf("SYN %s %d\r\n", transactionID, user.DataVersion)
+	res := fmt.Sprintf("SYN %d %d\r\n", tid, user.DataVersion)
 	c.Send(res)
 
 	if uint32(version) != user.DataVersion {
 		// Start user's data synchronization
 
 		// Send GTC
-		HandleSendGTC(c, transactionID, user.DataVersion, user.Gtc)
+		HandleSendGTC(c, tid, user.DataVersion, user.Gtc)
 
 		// Send BLP
-		HandleSendBLP(c, transactionID, user.DataVersion, user.Blp)
+		HandleSendBLP(c, tid, user.DataVersion, user.Blp)
 
 		// Send LST FL
-		HandleSendLST(c, transactionID, "FL", &user)
+		HandleSendLST(c, tid, "FL", &user)
 		// Send LST AL
-		HandleSendLST(c, transactionID, "AL", &user)
+		HandleSendLST(c, tid, "AL", &user)
 		// Send LST BL
-		HandleSendLST(c, transactionID, "BL", &user)
+		HandleSendLST(c, tid, "BL", &user)
 		// Send LST RL
-		HandleSendLST(c, transactionID, "RL", &user)
+		HandleSendLST(c, tid, "RL", &user)
 	}
 
 	return nil

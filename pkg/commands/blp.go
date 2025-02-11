@@ -15,13 +15,13 @@ var blpMode = []string{"AL", "BL"}
 
 func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
-	transactionID, args, err := parseTransactionID(args)
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -38,7 +38,7 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 	}
 
 	if user.Blp == args {
-		SendError(c, transactionID, ERR_ALREADY_IN_THE_MODE)
+		SendError(c, tid, ERR_ALREADY_IN_THE_MODE)
 		return errors.New("user already in requested mode")
 	}
 
@@ -49,11 +49,11 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 		return query.Error
 	}
 
-	HandleSendBLP(c, transactionID, user.DataVersion, user.Blp)
+	HandleSendBLP(c, tid, user.DataVersion, user.Blp)
 	return nil
 }
 
-func HandleSendBLP(c *clients.Client, tid string, version uint32, blp string) {
-	res := fmt.Sprintf("BLP %s %d %s\r\n", tid, version, blp)
+func HandleSendBLP(c *clients.Client, tid uint32, version uint32, blp string) {
+	res := fmt.Sprintf("BLP %d %d %s\r\n", tid, version, blp)
 	c.Send(res)
 }

@@ -60,7 +60,7 @@ func HandleURL(c *clients.Client, args string) error {
 		return fmt.Errorf("invalid URL type: %s", urlType)
 	}
 
-	res := fmt.Sprintf("URL %s %s\r\n", tid, url)
+	res := fmt.Sprintf("URL %d %s\r\n", tid, url)
 	c.Send(res)
 	return nil
 }

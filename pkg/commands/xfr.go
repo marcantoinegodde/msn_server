@@ -20,8 +20,8 @@ const (
 	CKI_TIMEOUT         time.Duration = 2 * time.Minute
 )
 
-func HandleXFRDispatch(cf config.DispatchServer, c *clients.Client, transactionID string) {
-	res := fmt.Sprintf("XFR %s NS %s:%d\r\n", transactionID, cf.NotificationServerAddr, cf.NotificationServerPort)
+func HandleXFRDispatch(cf config.DispatchServer, c *clients.Client, tid uint32) {
+	res := fmt.Sprintf("XFR %d NS %s:%d\r\n", tid, cf.NotificationServerAddr, cf.NotificationServerPort)
 	c.Send(res)
 }
 
@@ -58,7 +58,7 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 		return err
 	}
 
-	res := fmt.Sprintf("XFR %s SB %s:%d %s %s\r\n", tid, cf.SwitchboardServerAddr, cf.SwitchboardServerPort, SB_SECURITY_PACKAGE, cki)
+	res := fmt.Sprintf("XFR %d SB %s:%d %s %s\r\n", tid, cf.SwitchboardServerAddr, cf.SwitchboardServerPort, SB_SECURITY_PACKAGE, cki)
 	c.Send(res)
 
 	return nil

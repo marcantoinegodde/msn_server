@@ -53,7 +53,7 @@ const (
 	ERR_PASSPORT_NOT_VERIFIED    int = 924
 )
 
-func SendError(c *clients.Client, transactionID string, errorCode int) {
-	res := fmt.Sprintf("%d %s\r\n", errorCode, transactionID)
+func SendError(c *clients.Client, tid uint32, errorCode int) {
+	res := fmt.Sprintf("%d %d\r\n", errorCode, tid)
 	c.Send(res)
 }

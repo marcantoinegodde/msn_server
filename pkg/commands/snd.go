@@ -20,7 +20,7 @@ func HandleSND(c *clients.Client, args string) error {
 	}
 
 	// We don't send any email, just ack the transaction
-	res := fmt.Sprintf("SND %s OK\r\n", tid)
+	res := fmt.Sprintf("SND %d OK\r\n", tid)
 	c.Send(res)
 	return nil
 }

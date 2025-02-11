@@ -14,13 +14,13 @@ import (
 
 func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
-	transactionID, args, err := parseTransactionID(args)
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 
 	if !c.Session.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
@@ -46,7 +46,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("ForwardList").Find(&principal)
 		if err != nil {
-			SendError(c, transactionID, ERR_NOT_ON_LIST)
+			SendError(c, tid, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -87,7 +87,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("AllowList").Find(&principal)
 		if err != nil {
-			SendError(c, transactionID, ERR_NOT_ON_LIST)
+			SendError(c, tid, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -108,7 +108,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("BlockList").Find(&principal)
 		if err != nil {
-			SendError(c, transactionID, ERR_NOT_ON_LIST)
+			SendError(c, tid, ERR_NOT_ON_LIST)
 			log.Println("Error: tried to remove user not on list")
 			return nil
 		}
@@ -134,7 +134,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return err
 	}
 
-	res := fmt.Sprintf("REM %s %s %d %s\r\n", transactionID, listName, user.DataVersion, email)
+	res := fmt.Sprintf("REM %d %s %d %s\r\n", tid, listName, user.DataVersion, email)
 	c.Send(res)
 
 	return nil

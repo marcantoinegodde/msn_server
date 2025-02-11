@@ -11,7 +11,7 @@ var supportedProtocols = []string{"MSNP2", "CVR0"}
 
 func HandleVER(c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	transactionID, arguments, err := parseTransactionID(arguments)
+	tid, arguments, err := parseTransactionID(arguments)
 	if err != nil {
 		return err
 	}
@@ -27,12 +27,12 @@ func HandleVER(c *clients.Client, arguments string) error {
 	}
 
 	if len(serverProtocols) < 2 {
-		res := fmt.Sprintf("VER %s %s\r\n", transactionID, "0")
+		res := fmt.Sprintf("VER %d %s\r\n", tid, "0")
 		c.Send(res)
 		return errors.New("protocol mismatch")
 	}
 
-	res := fmt.Sprintf("VER %s %s\r\n", transactionID, strings.Join(serverProtocols, " "))
+	res := fmt.Sprintf("VER %d %s\r\n", tid, strings.Join(serverProtocols, " "))
 	c.Send(res)
 	return nil
 }

@@ -69,7 +69,7 @@ func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			return query.Error
 		}
 
-		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, user.Email, user.DisplayName)
+		res := fmt.Sprintf("REA %d %d %s %s\r\n", tid, user.DataVersion, user.Email, user.DisplayName)
 		c.Send(res)
 
 		if err := HandleBatchNLN(db, m, clients, c); err != nil {
@@ -85,7 +85,7 @@ func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			return query.Error
 		}
 
-		res := fmt.Sprintf("REA %s %d %s %s\r\n", tid, user.DataVersion, email, newDisplayName)
+		res := fmt.Sprintf("REA %d %d %s %s\r\n", tid, user.DataVersion, email, newDisplayName)
 		c.Send(res)
 	}
 

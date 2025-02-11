@@ -17,19 +17,19 @@ var statusCodes = []string{"NLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN
 
 func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
-	transactionID, args, err := parseTransactionID(args)
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
 	args, _, _ = strings.Cut(args, " ") // Remove the trailing space sent for this command
 
 	if !c.Session.Authenticated {
-		SendError(c, transactionID, ERR_NOT_LOGGED_IN)
+		SendError(c, tid, ERR_NOT_LOGGED_IN)
 		return errors.New("not logged in")
 	}
 
 	if !slices.Contains(statusCodes, args) {
-		SendError(c, transactionID, ERR_INVALID_PARAMETER)
+		SendError(c, tid, ERR_INVALID_PARAMETER)
 		return nil
 	}
 
@@ -48,7 +48,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return query.Error
 	}
 
-	res := fmt.Sprintf("CHG %s %s\r\n", transactionID, user.Status)
+	res := fmt.Sprintf("CHG %d %s\r\n", tid, user.Status)
 	c.Send(res)
 
 	// Receive ILN on first CHG
@@ -72,7 +72,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			}
 
 			// Send initial presence notification
-			HandleSendILN(c, transactionID, contact.Status, contact.Email, contact.DisplayName)
+			HandleSendILN(c, tid, contact.Status, contact.Email, contact.DisplayName)
 		}
 	}
 
