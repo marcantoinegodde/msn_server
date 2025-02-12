@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
-	"slices"
 	"strings"
 
 	"gorm.io/gorm"
 )
-
-var gtcMode = []string{"A", "N"}
 
 func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
@@ -25,7 +22,11 @@ func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 		return errors.New("not logged in")
 	}
 
-	if !slices.Contains(gtcMode, args) {
+	gtc := database.Gtc(args)
+	switch gtc {
+	case database.A, database.N:
+		break
+	default:
 		return errors.New("invalid mode")
 	}
 
@@ -37,12 +38,12 @@ func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 		return query.Error
 	}
 
-	if user.Gtc == args {
+	if user.Gtc == gtc {
 		SendError(c, tid, ERR_ALREADY_IN_THE_MODE)
 		return errors.New("user already in requested mode")
 	}
 
-	user.Gtc = args
+	user.Gtc = gtc
 	user.DataVersion++
 	query = db.Save(&user)
 	if query.Error != nil {
@@ -53,7 +54,7 @@ func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 	return nil
 }
 
-func HandleSendGTC(c *clients.Client, tid uint32, version uint32, gtc string) {
+func HandleSendGTC(c *clients.Client, tid uint32, version uint32, gtc database.Gtc) {
 	res := fmt.Sprintf("GTC %d %d %s\r\n", tid, version, gtc)
 	c.Send(res)
 }

@@ -18,7 +18,7 @@ type User struct {
 	DisplayName string
 	Status      Status  `gorm:"default:FLN"`
 	DataVersion uint32  `gorm:"default:0"`
-	Gtc         string  `gorm:"default:A"`
+	Gtc         Gtc     `gorm:"default:A"`
 	Blp         Blp     `gorm:"default:AL"`
 	ForwardList []*User `gorm:"many2many:forward_list"`
 	AllowList   []*User `gorm:"many2many:allow_list"`
