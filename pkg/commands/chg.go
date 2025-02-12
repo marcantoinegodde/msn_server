@@ -69,7 +69,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			}
 
 			// Skip contacts in BL mode that don't have the user on their allow list
-			if contact.Blp == "BL" && !isMember(contact.AllowList, &user) {
+			if contact.Blp == database.BL && !isMember(contact.AllowList, &user) {
 				continue
 			}
 

@@ -25,7 +25,7 @@ func HandleBatchFLN(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Clie
 			continue
 		}
 
-		if user.Blp == "BL" && !isMember(user.AllowList, contact) {
+		if user.Blp == database.BL && !isMember(user.AllowList, contact) {
 			continue
 		}
 

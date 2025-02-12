@@ -108,7 +108,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		// Notify user if online, not blocked and explicitely allowed if BLP is BL
 		if !(principal.Status == database.FLN || principal.Status == database.HDN) &&
 			!isMember(principal.BlockList, &user) &&
-			!(principal.Blp == "BL" && !isMember(principal.AllowList, &user)) {
+			!(principal.Blp == database.BL && !isMember(principal.AllowList, &user)) {
 			HandleSendILN(c, tid, principal.Status, principal.Email, principal.DisplayName)
 		}
 

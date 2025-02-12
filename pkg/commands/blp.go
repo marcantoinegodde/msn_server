@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
-	"slices"
 	"strings"
 
 	"gorm.io/gorm"
 )
-
-var blpMode = []string{"AL", "BL"}
 
 func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
@@ -25,7 +22,11 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 		return errors.New("not logged in")
 	}
 
-	if !slices.Contains(blpMode, args) {
+	blp := database.Blp(args)
+	switch blp {
+	case database.AL, database.BL:
+		break
+	default:
 		return errors.New("invalid mode")
 	}
 
@@ -37,12 +38,12 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 		return query.Error
 	}
 
-	if user.Blp == args {
+	if user.Blp == blp {
 		SendError(c, tid, ERR_ALREADY_IN_THE_MODE)
 		return errors.New("user already in requested mode")
 	}
 
-	user.Blp = args
+	user.Blp = blp
 	user.DataVersion++
 	query = db.Save(&user)
 	if query.Error != nil {
@@ -53,7 +54,7 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 	return nil
 }
 
-func HandleSendBLP(c *clients.Client, tid uint32, version uint32, blp string) {
+func HandleSendBLP(c *clients.Client, tid uint32, version uint32, blp database.Blp) {
 	res := fmt.Sprintf("BLP %d %d %s\r\n", tid, version, blp)
 	c.Send(res)
 }
