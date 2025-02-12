@@ -17,7 +17,7 @@ func HandleBatchNLN(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Clie
 	}
 
 	for _, contact := range user.ReverseList {
-		if contact.Status == "FLN" {
+		if contact.Status == database.FLN {
 			continue
 		}
 
@@ -42,7 +42,7 @@ func HandleBatchNLN(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Clie
 	return nil
 }
 
-func HandleSendNLN(c *clients.Client, status string, email string, name string) {
+func HandleSendNLN(c *clients.Client, status database.Status, email string, name string) {
 	res := fmt.Sprintf("NLN %s %s %s\r\n", status, email, name)
 	c.Send(res)
 }

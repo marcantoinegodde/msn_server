@@ -17,7 +17,7 @@ func HandleBatchFLN(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Clie
 	}
 
 	for _, contact := range user.ReverseList {
-		if contact.Status == "FLN" {
+		if contact.Status == database.FLN {
 			continue
 		}
 

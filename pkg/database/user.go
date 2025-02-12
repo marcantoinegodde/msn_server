@@ -1,6 +1,8 @@
 package database
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -14,7 +16,7 @@ type User struct {
 	State       string
 	City        string
 	DisplayName string
-	Status      string  `gorm:"default:FLN"`
+	Status      Status  `gorm:"default:FLN"`
 	DataVersion uint32  `gorm:"default:0"`
 	Gtc         string  `gorm:"default:A"`
 	Blp         string  `gorm:"default:AL"`

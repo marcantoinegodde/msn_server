@@ -6,14 +6,11 @@ import (
 	"log"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
-	"slices"
 	"strings"
 	"sync"
 
 	"gorm.io/gorm"
 )
-
-var statusCodes = []string{"NLN", "HDN", "IDL", "AWY", "BSY", "BRB", "PHN", "LUN"}
 
 func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
@@ -28,7 +25,12 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return errors.New("not logged in")
 	}
 
-	if !slices.Contains(statusCodes, args) {
+	// User isn't allowed to change their status to FLN
+	status := database.Status(args)
+	switch status {
+	case database.NLN, database.HDN, database.IDL, database.AWY, database.BSY, database.BRB, database.PHN, database.LUN:
+		break
+	default:
 		SendError(c, tid, ERR_INVALID_PARAMETER)
 		return nil
 	}
@@ -42,7 +44,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return query.Error
 	}
 
-	user.Status = args
+	user.Status = status
 	query = db.Save(&user)
 	if query.Error != nil {
 		return query.Error
@@ -57,7 +59,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 
 		for _, contact := range user.ForwardList {
 			// Skip contacts that are offline or hidden
-			if contact.Status == "FLN" || contact.Status == "HDN" {
+			if contact.Status == database.FLN || contact.Status == database.HDN {
 				continue
 			}
 
@@ -76,8 +78,8 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		}
 	}
 
-	// Inform followers (RL) of the status change
-	if user.Status == "HDN" {
+	// Inform followers (RL) of the database.status change
+	if user.Status == database.HDN {
 		if err := HandleBatchFLN(db, m, clients, c); err != nil {
 			log.Println("Error:", err)
 		}

@@ -48,7 +48,7 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 		return query.Error
 	}
 
-	if user.Status == "HDN" {
+	if user.Status == database.HDN {
 		SendError(c, tid, ERR_NOT_ALLOWED_WHEN_OFFLINE)
 		return nil
 	}

@@ -62,7 +62,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 			var user database.User
 			query := ns.db.First(&user, "email = ?", c.Session.Email)
 			if query.Error == nil {
-				user.Status = "FLN"
+				user.Status = database.FLN
 				ns.db.Save(&user)
 			}
 
