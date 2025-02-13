@@ -16,6 +16,7 @@ const (
 	ERR_LIST_FULL                int = 210
 	ERR_ALREADY_THERE            int = 215
 	ERR_NOT_ON_LIST              int = 216
+	ERR_NOT_ONLINE               int = 217
 	ERR_ALREADY_IN_THE_MODE      int = 218
 	ERR_ALREADY_IN_OPPOSITE_LIST int = 219
 	ERR_NO_SUCH_GROUP            int = 231
