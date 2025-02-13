@@ -16,18 +16,18 @@ import (
 )
 
 type NotificationServer struct {
+	config  *config.MSNServerConfiguration
 	db      *gorm.DB
 	rdb     *redis.Client
-	config  *config.MSNServerConfiguration
 	m       *sync.Mutex
 	clients map[string]*clients.Client
 }
 
-func NewNotificationServer(db *gorm.DB, rdb *redis.Client, c *config.MSNServerConfiguration) *NotificationServer {
+func NewNotificationServer(c *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client) *NotificationServer {
 	return &NotificationServer{
+		config:  c,
 		db:      db,
 		rdb:     rdb,
-		config:  c,
 		m:       &sync.Mutex{},
 		clients: map[string]*clients.Client{},
 	}
