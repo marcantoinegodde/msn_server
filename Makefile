@@ -13,3 +13,11 @@ notification:
 .PHONY: notification-debug
 notification-debug:
 	air -c .air.notification.debug.toml
+
+.PHONY: switchboard
+switchboard:
+	air -c .air.switchboard.toml
+
+.PHONY: switchboard-debug
+switchboard-debug:
+	air -c .air.switchboard.debug.toml
