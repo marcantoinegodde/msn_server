@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"msnserver/pkg/clients"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -114,4 +116,63 @@ func HandleUSRDispatch(arguments string) (uint32, error) {
 	}
 
 	return tid, nil
+}
+
+func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, m *sync.Mutex, clients map[string]*clients.Client,
+	c *clients.Client, arguments string) error {
+	arguments, _, _ = strings.Cut(arguments, "\r\n")
+	tid, arguments, err := parseTransactionID(arguments)
+	if err != nil {
+		return err
+	}
+
+	// Reject already authenticated clients
+	if c.Session.Authenticated {
+		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
+		return errors.New("already authenticated")
+	}
+
+	// Parse arguments
+	splitArguments := strings.Fields(arguments)
+	if len(splitArguments) != 2 {
+		err := errors.New("invalid transaction")
+		return err
+	}
+
+	c.Session.Email = splitArguments[0]
+	userCki := splitArguments[1]
+
+	// Fetch CKI from Redis
+	cki, err := rdb.Get(context.TODO(), c.Session.Email).Result()
+	if err == redis.Nil {
+		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
+		return errors.New("cki not found")
+	} else if err != nil {
+		return errors.New("error getting cki")
+	}
+
+	// Validate CKI
+	if cki != userCki {
+		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
+		return errors.New("invalid cki")
+	}
+
+	var user database.User
+	if err := db.First(&user, "email = ?", c.Session.Email).Error; err != nil {
+		return err
+	}
+
+	// Update user status
+	c.Session.Authenticated = true
+
+	// Update client map
+	// TODO: handle logout if user is already logged in
+	m.Lock()
+	clients[c.Session.Email] = c
+	m.Unlock()
+
+	res := fmt.Sprintf("USR %d OK %s %s\r\n", tid, user.Email, user.DisplayName)
+	c.Send(res)
+
+	return nil
 }

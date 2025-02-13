@@ -20,14 +20,14 @@ func Load(c config.Database) (*gorm.DB, error) {
 
 	db.AutoMigrate(&User{})
 
-	resetUsersStatus(db)
-
 	log.Println("Database initialized successfully")
 
 	return db, nil
 }
 
-func resetUsersStatus(db *gorm.DB) {
+func ResetUsersStatus(db *gorm.DB) {
+	// TODO: remove this function, store users' status in cache instead
+
 	err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&User{}).Update("status", FLN).Error
 	if err != nil {
 		log.Fatalf("Failed to reset column 'status': %v", err)

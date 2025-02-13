@@ -4,16 +4,31 @@ import (
 	"fmt"
 	"log"
 	"msnserver/config"
+	"msnserver/pkg/clients"
+	"msnserver/pkg/commands"
 	"net"
+	"strings"
+	"sync"
+
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 type SwitchboardServer struct {
-	config *config.MSNServerConfiguration
+	config  *config.MSNServerConfiguration
+	db      *gorm.DB
+	rdb     *redis.Client
+	m       *sync.Mutex
+	clients map[string]*clients.Client
 }
 
-func NewSwitchboardServer(c *config.MSNServerConfiguration) *SwitchboardServer {
+func NewSwitchboardServer(c *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client) *SwitchboardServer {
 	return &SwitchboardServer{
-		config: c,
+		config:  c,
+		db:      db,
+		rdb:     rdb,
+		m:       &sync.Mutex{},
+		clients: map[string]*clients.Client{},
 	}
 }
 
@@ -39,5 +54,40 @@ func (ss *SwitchboardServer) Start() {
 }
 
 func (ss *SwitchboardServer) handleConnection(conn net.Conn) {
-	defer conn.Close()
+	c := clients.NewClient(conn)
+
+	defer func() {
+		if c.Session.Email != "" {
+			ss.m.Lock()
+			delete(ss.clients, c.Session.Email)
+			ss.m.Unlock()
+		}
+
+		c.Disconnect()
+	}()
+
+	for {
+		select {
+		case msg := <-c.RecvChan:
+			command, arguments, found := strings.Cut(msg, " ")
+			if !found {
+				command, _, _ = strings.Cut(msg, "\r\n")
+			}
+
+			switch command {
+			case "USR":
+				if err := commands.HandleUSRSwitchboard(ss.db, ss.rdb, ss.m, ss.clients, c, arguments); err != nil {
+					log.Println("Error:", err)
+					return
+				}
+
+			default:
+				log.Println("Unknown command:", command)
+				return
+			}
+
+		case <-c.DoneChan:
+			return
+		}
+	}
 }
