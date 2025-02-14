@@ -143,7 +143,7 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, m *sync.Mutex, clients
 	userCki := splitArguments[1]
 
 	// Fetch CKI from Redis
-	cki, err := rdb.Get(context.TODO(), c.Session.Email).Result()
+	cki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
 	if err == redis.Nil {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("cki not found")
