@@ -24,10 +24,11 @@ type Database struct {
 }
 
 type Redis struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Password string `mapstructure:"password"`
-	DB       int    `mapstructure:"db"`
+	Host          string `mapstructure:"host"`
+	Port          int    `mapstructure:"port"`
+	Password      string `mapstructure:"password"`
+	DB            int    `mapstructure:"db"`
+	PubSubChannel string `mapstructure:"pubsub_channel"`
 }
 
 type DispatchServer struct {

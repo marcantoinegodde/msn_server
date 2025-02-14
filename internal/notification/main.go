@@ -43,6 +43,8 @@ func (ns *NotificationServer) Start() {
 
 	log.Println("Listening on:", ln.Addr())
 
+	go ns.subscribe()
+
 	for {
 		conn, err := ln.Accept()
 		if err != nil {

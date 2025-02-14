@@ -82,7 +82,7 @@ func (ss *SwitchboardServer) handleConnection(conn net.Conn) {
 				}
 
 			case "CAL":
-				if err := commands.HandleCAL(ss.db, c, arguments); err != nil {
+				if err := commands.HandleCAL(ss.config, ss.db, ss.rdb, c, arguments); err != nil {
 					log.Println("Error:", err)
 					return
 				}
