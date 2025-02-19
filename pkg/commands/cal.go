@@ -86,12 +86,12 @@ func HandleCAL(cf *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client
 	// TODO: Create a session
 	// TODO: Generate a random session ID
 	// TODO: Max session
-	sessionId := 12345678
+	sessionId := "abcdefgh"
 
 	// Generate an RNG message to send to NS
 	rngMsg := RNGMessage{
 		SwitchboardServerAddress: fmt.Sprintf("%s:%d", cf.SwitchboardServer.ServerAddr, cf.SwitchboardServer.ServerPort),
-		SessionID:                uint32(sessionId),
+		SessionID:                sessionId,
 		CallerEmail:              user.Email,
 		CallerDisplayName:        user.DisplayName,
 		CalleeEmail:              callee.Email,
@@ -107,7 +107,7 @@ func HandleCAL(cf *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client
 		return err
 	}
 
-	res := fmt.Sprintf("CAL %d RINGING %d\r\n", tid, sessionId)
+	res := fmt.Sprintf("CAL %d RINGING %s\r\n", tid, sessionId)
 	c.Send(res)
 
 	return nil
