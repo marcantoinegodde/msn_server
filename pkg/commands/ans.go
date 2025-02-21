@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"msnserver/pkg/clients"
+	"msnserver/pkg/sessions"
 	"strings"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func HandleANS(rdb *redis.Client, c *clients.Client, args string) error {
+func HandleANS(rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
@@ -31,7 +32,7 @@ func HandleANS(rdb *redis.Client, c *clients.Client, args string) error {
 
 	c.Session.Email = splitArguments[0]
 	userCki := splitArguments[1]
-	// sessionID := splitArguments[2]
+	sessionID := splitArguments[2]
 
 	// Fetch CKI from Redis
 	cki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
@@ -46,6 +47,17 @@ func HandleANS(rdb *redis.Client, c *clients.Client, args string) error {
 	if cki != userCki {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("invalid cki")
+	}
+
+	// Parse session ID
+	sid, err := parseSessionID(sessionID)
+	if err != nil {
+		return err
+	}
+
+	// Join session
+	if err := sbs.JoinSession(c, sid); err != nil {
+		return err
 	}
 
 	c.Session.Authenticated = true
