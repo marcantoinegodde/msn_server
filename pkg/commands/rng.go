@@ -12,7 +12,7 @@ import (
 
 type RNGMessage struct {
 	SwitchboardServerAddress string `json:"switchboard_server_address"`
-	SessionID                string `json:"session_id"`
+	SessionID                uint32 `json:"session_id"`
 	CallerEmail              string `json:"caller_email"`
 	CallerDisplayName        string `json:"caller_display_name"`
 	CalleeEmail              string `json:"callee_email"`
@@ -27,7 +27,7 @@ func HandleRNG(rdb *redis.Client, m *sync.Mutex, clients map[string]*clients.Cli
 	m.Lock()
 	callee, ok := clients[rngMessage.CalleeEmail]
 	if ok {
-		res := fmt.Sprintf("RNG %s %s %s %s %s %s\r\n", rngMessage.SessionID, rngMessage.SwitchboardServerAddress,
+		res := fmt.Sprintf("RNG %d %s %s %s %s %s\r\n", rngMessage.SessionID, rngMessage.SwitchboardServerAddress,
 			SB_SECURITY_PACKAGE, cki, rngMessage.CallerEmail, rngMessage.CallerDisplayName)
 		callee.Send(res)
 	}

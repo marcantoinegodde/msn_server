@@ -8,6 +8,7 @@ import (
 	"msnserver/config"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
+	"msnserver/pkg/sessions"
 	"msnserver/pkg/utils"
 	"strings"
 
@@ -15,7 +16,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleCAL(cf *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client, c *clients.Client, args string) error {
+func HandleCAL(cf *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client,
+	sbs *sessions.SwitchboardSessions, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
@@ -83,10 +85,8 @@ func HandleCAL(cf *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client
 		return nil
 	}
 
-	// TODO: Create a session
-	// TODO: Generate a random session ID
-	// TODO: Max session
-	sessionId := "abcdefgh"
+	// Retrieve the session ID
+	sessionId := sbs.GetSessionID(c)
 
 	// Generate an RNG message to send to NS
 	rngMsg := RNGMessage{
@@ -107,7 +107,7 @@ func HandleCAL(cf *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client
 		return err
 	}
 
-	res := fmt.Sprintf("CAL %d RINGING %s\r\n", tid, sessionId)
+	res := fmt.Sprintf("CAL %d RINGING %d\r\n", tid, sessionId)
 	c.Send(res)
 
 	return nil

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
+	"msnserver/pkg/sessions"
 	"slices"
 	"strings"
 	"sync"
@@ -118,8 +119,7 @@ func HandleUSRDispatch(arguments string) (uint32, error) {
 	return tid, nil
 }
 
-func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, m *sync.Mutex, clients map[string]*clients.Client,
-	c *clients.Client, arguments string) error {
+func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	tid, arguments, err := parseTransactionID(arguments)
 	if err != nil {
@@ -162,14 +162,11 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, m *sync.Mutex, clients
 		return err
 	}
 
+	// Create Switchboard session
+	sbs.CreateSession(c)
+
 	// Update user status
 	c.Session.Authenticated = true
-
-	// Update client map
-	// TODO: handle logout if user is already logged in
-	m.Lock()
-	clients[c.Session.Email] = c
-	m.Unlock()
 
 	res := fmt.Sprintf("USR %d OK %s %s\r\n", tid, user.Email, user.DisplayName)
 	c.Send(res)
