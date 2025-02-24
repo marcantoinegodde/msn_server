@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+type cki struct {
+	Cki       string `json:"cki"`
+	SessionID uint32 `json:"session_id"`
+}
+
 func parseTransactionID(arguments string) (uint32, string, error) {
 	rawTid, arguments, _ := strings.Cut(arguments, " ")
 

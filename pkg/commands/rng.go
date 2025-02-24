@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/utils"
@@ -19,8 +20,17 @@ type RNGMessage struct {
 }
 
 func HandleRNG(rdb *redis.Client, m *sync.Mutex, clients map[string]*clients.Client, rngMessage RNGMessage) error {
-	cki := utils.GenerateRandomString(25)
-	if err := rdb.Set(context.TODO(), rngMessage.CalleeEmail, cki, CKI_TIMEOUT).Err(); err != nil {
+	cki := cki{
+		Cki:       utils.GenerateRandomString(25),
+		SessionID: rngMessage.SessionID,
+	}
+
+	jsonCki, err := json.Marshal(cki)
+	if err != nil {
+		return err
+	}
+
+	if err := rdb.Set(context.TODO(), rngMessage.CalleeEmail, jsonCki, CKI_TIMEOUT).Err(); err != nil {
 		return err
 	}
 
@@ -28,7 +38,7 @@ func HandleRNG(rdb *redis.Client, m *sync.Mutex, clients map[string]*clients.Cli
 	callee, ok := clients[rngMessage.CalleeEmail]
 	if ok {
 		res := fmt.Sprintf("RNG %d %s %s %s %s %s\r\n", rngMessage.SessionID, rngMessage.SwitchboardServerAddress,
-			SB_SECURITY_PACKAGE, cki, rngMessage.CallerEmail, rngMessage.CallerDisplayName)
+			SB_SECURITY_PACKAGE, cki.Cki, rngMessage.CallerEmail, rngMessage.CallerDisplayName)
 		callee.Send(res)
 	}
 	m.Unlock()

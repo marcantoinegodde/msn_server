@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"msnserver/config"
@@ -53,12 +54,21 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 		return nil
 	}
 
-	cki := utils.GenerateRandomString(25)
-	if err := rdb.Set(context.TODO(), c.Session.Email, cki, CKI_TIMEOUT).Err(); err != nil {
+	cki := cki{
+		Cki:       utils.GenerateRandomString(25),
+		SessionID: 0,
+	}
+
+	jsonCki, err := json.Marshal(cki)
+	if err != nil {
 		return err
 	}
 
-	res := fmt.Sprintf("XFR %d SB %s:%d %s %s\r\n", tid, cf.SwitchboardServerAddr, cf.SwitchboardServerPort, SB_SECURITY_PACKAGE, cki)
+	if err := rdb.Set(context.TODO(), c.Session.Email, jsonCki, CKI_TIMEOUT).Err(); err != nil {
+		return err
+	}
+
+	res := fmt.Sprintf("XFR %d SB %s:%d %s %s\r\n", tid, cf.SwitchboardServerAddr, cf.SwitchboardServerPort, SB_SECURITY_PACKAGE, cki.Cki)
 	c.Send(res)
 
 	return nil

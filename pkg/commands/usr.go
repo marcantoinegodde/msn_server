@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"msnserver/pkg/clients"
@@ -143,7 +144,7 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.Switchbo
 	userCki := splitArguments[1]
 
 	// Fetch CKI from Redis
-	cki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
+	rawCki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
 	if err == redis.Nil {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("cki not found")
@@ -151,8 +152,13 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.Switchbo
 		return errors.New("error getting cki")
 	}
 
+	var cki cki
+	if err := json.Unmarshal([]byte(rawCki), &cki); err != nil {
+		return err
+	}
+
 	// Validate CKI
-	if cki != userCki {
+	if userCki != cki.Cki {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("invalid cki")
 	}

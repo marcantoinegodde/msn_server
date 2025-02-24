@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"msnserver/pkg/clients"
@@ -35,7 +36,7 @@ func HandleANS(rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.
 	sessionID := splitArguments[2]
 
 	// Fetch CKI from Redis
-	cki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
+	rawCki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
 	if err == redis.Nil {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("cki not found")
@@ -43,8 +44,13 @@ func HandleANS(rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.
 		return errors.New("error getting cki")
 	}
 
+	var cki cki
+	if err := json.Unmarshal([]byte(rawCki), &cki); err != nil {
+		return err
+	}
+
 	// Validate CKI
-	if cki != userCki {
+	if userCki != cki.Cki {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("invalid cki")
 	}
@@ -53,6 +59,12 @@ func HandleANS(rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.
 	sid, err := parseSessionID(sessionID)
 	if err != nil {
 		return err
+	}
+
+	// Validate session ID
+	if sid != cki.SessionID {
+		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
+		return errors.New("invalid session ID")
 	}
 
 	// Join session
