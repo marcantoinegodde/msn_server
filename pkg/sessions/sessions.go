@@ -40,16 +40,17 @@ func (sbs *SwitchboardSessions) GetSessionID(c *clients.Client) uint32 {
 	return sbs.clientsSession[c.Id]
 }
 
-func (sbs *SwitchboardSessions) JoinSession(c *clients.Client, sessionID uint32) error {
+func (sbs *SwitchboardSessions) JoinSession(c *clients.Client, sessionID uint32) ([]*clients.Client, error) {
 	sbs.m.Lock()
 	defer sbs.m.Unlock()
 
 	if _, ok := sbs.sessions[sessionID]; !ok {
-		return errors.New("session not found")
+		return nil, errors.New("session not found")
 	}
 
+	s := sbs.sessions[sessionID]
 	sbs.sessions[sessionID] = append(sbs.sessions[sessionID], c)
 	sbs.clientsSession[c.Id] = sessionID
 
-	return nil
+	return s, nil
 }

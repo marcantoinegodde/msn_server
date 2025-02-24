@@ -78,7 +78,7 @@ func (ss *SwitchboardServer) handleConnection(conn net.Conn) {
 				}
 
 			case "ANS":
-				if err := commands.HandleANS(ss.rdb, ss.sbs, c, arguments); err != nil {
+				if err := commands.HandleANS(ss.db, ss.rdb, ss.sbs, c, arguments); err != nil {
 					log.Println("Error:", err)
 					return
 				}

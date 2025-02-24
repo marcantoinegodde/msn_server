@@ -140,11 +140,11 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.Switchbo
 		return err
 	}
 
-	c.Session.Email = splitArguments[0]
+	email := splitArguments[0]
 	userCki := splitArguments[1]
 
 	// Fetch CKI from Redis
-	rawCki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
+	rawCki, err := rdb.GetDel(context.TODO(), email).Result()
 	if err == redis.Nil {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("cki not found")
@@ -164,14 +164,16 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.Switchbo
 	}
 
 	var user database.User
-	if err := db.First(&user, "email = ?", c.Session.Email).Error; err != nil {
+	if err := db.First(&user, "email = ?", email).Error; err != nil {
 		return err
 	}
 
 	// Create Switchboard session
 	sbs.CreateSession(c)
 
-	// Update user status
+	// Update client session
+	c.Session.Email = user.Email
+	c.Session.DisplayName = user.DisplayName
 	c.Session.Authenticated = true
 
 	res := fmt.Sprintf("USR %d OK %s %s\r\n", tid, user.Email, user.DisplayName)

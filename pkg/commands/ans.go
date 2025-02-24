@@ -6,13 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"msnserver/pkg/clients"
+	"msnserver/pkg/database"
 	"msnserver/pkg/sessions"
 	"strings"
 
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
-func HandleANS(rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.Client, args string) error {
+func HandleANS(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
 	tid, args, err := parseTransactionID(args)
 	if err != nil {
@@ -31,12 +33,12 @@ func HandleANS(rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.
 		return errors.New("invalid transaction")
 	}
 
-	c.Session.Email = splitArguments[0]
+	email := splitArguments[0]
 	userCki := splitArguments[1]
 	sessionID := splitArguments[2]
 
 	// Fetch CKI from Redis
-	rawCki, err := rdb.GetDel(context.TODO(), c.Session.Email).Result()
+	rawCki, err := rdb.GetDel(context.TODO(), email).Result()
 	if err == redis.Nil {
 		SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 		return errors.New("cki not found")
@@ -67,11 +69,24 @@ func HandleANS(rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.
 		return errors.New("invalid session ID")
 	}
 
-	// Join session
-	if err := sbs.JoinSession(c, sid); err != nil {
+	// Fetch user from the database
+	var user database.User
+	if err := db.First(&user, "email = ?", email).Error; err != nil {
 		return err
 	}
 
+	// Join session
+	s, err := sbs.JoinSession(c, sid)
+	if err != nil {
+		return err
+	}
+
+	// Send initial roaster information
+	HandleSendIRO(c, tid, s)
+
+	// Update client session
+	c.Session.Email = user.Email
+	c.Session.DisplayName = user.DisplayName
 	c.Session.Authenticated = true
 
 	res := fmt.Sprintf("ANS %d OK\r\n", tid)
