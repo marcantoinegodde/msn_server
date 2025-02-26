@@ -16,7 +16,7 @@ The project aims to support the entire feature set of MSNP2, including:
 - [x] User authentication
 - [x] Contact list management
 - [x] Status updates
-- [ ] Real-time messaging
+- [x] Real-time messaging
 
 ## :rocket: Runing the server in development mode
 
