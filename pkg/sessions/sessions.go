@@ -45,11 +45,15 @@ func (sbs *SwitchboardSessions) JoinSession(c *clients.Client, sessionID uint32)
 	sbs.m.Lock()
 	defer sbs.m.Unlock()
 
+	// Check if session still exists
 	if _, ok := sbs.sessions[sessionID]; !ok {
 		return nil, errors.New("session not found")
 	}
 
+	// Copy session before joining it
 	s := sbs.sessions[sessionID]
+
+	// Join session
 	sbs.sessions[sessionID] = append(sbs.sessions[sessionID], c)
 	sbs.clientsSession[c.Id] = sessionID
 
@@ -60,17 +64,20 @@ func (sbs *SwitchboardSessions) LeaveSession(c *clients.Client) ([]*clients.Clie
 	sbs.m.Lock()
 	defer sbs.m.Unlock()
 
+	// Get session ID
 	sessionID, ok := sbs.clientsSession[c.Id]
 	if !ok {
 		return nil, errors.New("client not in session")
 	}
 
+	// Cleanup session if client is the last one
 	if len(sbs.sessions[sessionID]) == 1 {
 		delete(sbs.sessions, sessionID)
 		delete(sbs.clientsSession, c.Id)
 		return nil, nil
 	}
 
+	// Otherwise, remove client from session
 	for i, client := range sbs.sessions[sessionID] {
 		if client == c {
 			sbs.sessions[sessionID] = slices.Delete(sbs.sessions[sessionID], i, i+1)
@@ -81,4 +88,24 @@ func (sbs *SwitchboardSessions) LeaveSession(c *clients.Client) ([]*clients.Clie
 	delete(sbs.clientsSession, c.Id)
 
 	return sbs.sessions[sessionID], nil
+}
+
+func (sbs *SwitchboardSessions) MessageSession(c *clients.Client, res string) error {
+	sbs.m.Lock()
+	defer sbs.m.Unlock()
+
+	// Get session ID
+	sessionID, ok := sbs.clientsSession[c.Id]
+	if !ok {
+		return errors.New("client not in session")
+	}
+
+	// Send message to session
+	for _, client := range sbs.sessions[sessionID] {
+		if client != c {
+			client.Send(res)
+		}
+	}
+
+	return nil
 }

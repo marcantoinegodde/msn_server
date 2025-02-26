@@ -92,6 +92,12 @@ func (ss *SwitchboardServer) handleConnection(conn net.Conn) {
 					return
 				}
 
+			case "MSG":
+				if err := commands.HandleMSG(ss.sbs, c, arguments); err != nil {
+					log.Println("Error:", err)
+					return
+				}
+
 			case "OUT":
 				return
 
