@@ -81,13 +81,16 @@ func HandleANS(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions
 		return err
 	}
 
-	// Send initial roaster information
-	HandleSendIRO(c, tid, s)
-
 	// Update client session
 	c.Session.Email = user.Email
 	c.Session.DisplayName = user.DisplayName
 	c.Session.Authenticated = true
+
+	// Send initial roaster information to the client
+	HandleSendIRO(c, tid, s)
+
+	// Send join notification to all clients in the session
+	HandleSendJOI(c, s)
 
 	res := fmt.Sprintf("ANS %d OK\r\n", tid)
 	c.Send(res)
