@@ -3,6 +3,7 @@ package sessions
 import (
 	"errors"
 	"msnserver/pkg/clients"
+	"slices"
 	"sync"
 )
 
@@ -53,4 +54,31 @@ func (sbs *SwitchboardSessions) JoinSession(c *clients.Client, sessionID uint32)
 	sbs.clientsSession[c.Id] = sessionID
 
 	return s, nil
+}
+
+func (sbs *SwitchboardSessions) LeaveSession(c *clients.Client) ([]*clients.Client, error) {
+	sbs.m.Lock()
+	defer sbs.m.Unlock()
+
+	sessionID, ok := sbs.clientsSession[c.Id]
+	if !ok {
+		return nil, errors.New("client not in session")
+	}
+
+	if len(sbs.sessions[sessionID]) == 1 {
+		delete(sbs.sessions, sessionID)
+		delete(sbs.clientsSession, c.Id)
+		return nil, nil
+	}
+
+	for i, client := range sbs.sessions[sessionID] {
+		if client == c {
+			sbs.sessions[sessionID] = slices.Delete(sbs.sessions[sessionID], i, i+1)
+			break
+		}
+	}
+
+	delete(sbs.clientsSession, c.Id)
+
+	return sbs.sessions[sessionID], nil
 }

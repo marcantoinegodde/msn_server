@@ -54,7 +54,16 @@ func (ss *SwitchboardServer) Start() {
 func (ss *SwitchboardServer) handleConnection(conn net.Conn) {
 	c := clients.NewClient(conn)
 
-	defer c.Disconnect()
+	defer func() {
+		s, err := ss.sbs.LeaveSession(c)
+		if err != nil {
+			log.Println("Error leaving session:", err)
+		}
+
+		commands.HandleSendBYE(c, s)
+
+		c.Disconnect()
+	}()
 
 	for {
 		select {
