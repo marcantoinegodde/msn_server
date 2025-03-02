@@ -1,31 +1,16 @@
-package main
+package switchboard
 
-import (
-	"log"
-	"msnserver/config"
-	"msnserver/internal/switchboard"
-	"msnserver/pkg/database"
-	"msnserver/pkg/redis"
-)
+import "github.com/spf13/cobra"
 
-func main() {
-	log.Println("Starting MSN switchboard server...")
-
-	c, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalln("Error loading config:", err)
+func BuildSwitchboardCmd() *cobra.Command {
+	switchboardCmd := &cobra.Command{
+		Use:   "switchboard",
+		Short: "Start MSN switchboard server",
+		Long:  `Start the MSN switchboard server, which handles users communications.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			main()
+		},
 	}
 
-	db, err := database.Load(c.Database)
-	if err != nil {
-		log.Fatalln("Error loading database:", err)
-	}
-
-	rdb, err := redis.NewRedisClient(c.Redis)
-	if err != nil {
-		log.Fatalln("Error loading redis:", err)
-	}
-
-	ss := switchboard.NewSwitchboardServer(c, db, rdb)
-	ss.Start()
+	return switchboardCmd
 }

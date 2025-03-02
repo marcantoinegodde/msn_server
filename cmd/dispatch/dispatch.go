@@ -1,19 +1,18 @@
-package main
+package dispatch
 
 import (
-	"log"
-	"msnserver/config"
-	"msnserver/internal/dispatch"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	log.Println("Starting MSN dispatch server...")
-
-	c, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalln("Error loading config:", err)
+func BuildDispatchCmd() *cobra.Command {
+	dispatchCmd := &cobra.Command{
+		Use:   "dispatch",
+		Short: "Start MSN dispatch server",
+		Long:  `Start the MSN dispatch server, which handles incoming connections.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			main()
+		},
 	}
 
-	ds := dispatch.NewDispatchServer(c)
-	ds.Start()
+	return dispatchCmd
 }
