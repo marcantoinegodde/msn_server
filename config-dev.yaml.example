@@ -12,7 +12,7 @@ redis:
   db: 0
   pubsub_channel: switchboard
 dispatch_server:
-  server_addr: 192.168.102.1
+  server_addr: 192.168.101.1
   server_port: 1863
   notification_server_addr: 192.168.102.1
   notification_server_port: 1863
