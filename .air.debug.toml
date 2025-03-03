@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./tmp/msnserver switchboard"
+  bin = ""
   cmd = "go build -gcflags=\"all=-N -l\" -o ./tmp/msnserver main.go"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
@@ -12,7 +12,7 @@ tmp_dir = "tmp"
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = "dlv exec --headless --listen=127.0.0.1:2345 --log --accept-multiclient ./tmp/msnserver switchboard"
+  full_bin = "dlv exec --headless --listen=127.0.0.1:2345 --log --accept-multiclient ./tmp/msnserver"
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html"]
   include_file = []

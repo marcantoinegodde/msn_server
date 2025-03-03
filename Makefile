@@ -1,23 +1,23 @@
 .PHONY: dispatch
 dispatch:
-	air -c .air.dispatch.toml
+	air -build.args_bin=dispatch
 
 .PHONY: dispatch-debug
 dispatch-debug:
-	air -c .air.dispatch.debug.toml
+	air -c .air.debug.toml -build.args_bin=switchboard
 
 .PHONY: notification
 notification:
-	air -c .air.notification.toml
+	air -build.args_bin=notification
 
 .PHONY: notification-debug
 notification-debug:
-	air -c .air.notification.debug.toml
+	air -c .air.debug.toml -build.args_bin=notification
 
 .PHONY: switchboard
 switchboard:
-	air -c .air.switchboard.toml
+	air -build.args_bin=switchboard
 
 .PHONY: switchboard-debug
 switchboard-debug:
-	air -c .air.switchboard.debug.toml
+	air -c .air.debug.toml -build.args_bin=switchboard
