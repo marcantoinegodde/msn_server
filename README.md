@@ -30,7 +30,7 @@ The project aims to support the entire feature set of MSNP2, including:
 1. Add the configuration:
 
 ```bash
-cp config.yaml.template config.yaml
+cp config.yaml.example config.yaml
 ```
 
 2. Update the configuration file with the correct values.
@@ -49,7 +49,7 @@ docker compose up
 1. Add the configuration:
 
 ```bash
-cp config-dev.yaml.template config.yaml
+cp config-dev.yaml.example config.yaml
 ```
 
 2. Update the configuration file with the correct values.
