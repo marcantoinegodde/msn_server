@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -55,7 +56,7 @@ func (c *Client) receiveHandler(conn net.Conn) {
 		}
 
 		data := string(buf[:n])
-		log.Printf("[%s] <<< %s\n", c.Id, data)
+		log.Printf("[%s] <<< %s\n", c.Id, strings.TrimSuffix(data, "\r\n"))
 		c.RecvChan <- data
 	}
 }
@@ -69,7 +70,7 @@ func (c *Client) sendHandler() {
 			return
 		}
 
-		log.Printf("[%s] >>> %s\n", c.Id, msg)
+		log.Printf("[%s] >>> %s\n", c.Id, strings.TrimSuffix(msg, "\r\n"))
 		if _, err := c.Conn.Write([]byte(msg)); err != nil {
 			log.Println("Error writing to connection:", err)
 			c.DoneChan <- true
