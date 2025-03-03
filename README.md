@@ -18,27 +18,61 @@ The project aims to support the entire feature set of MSNP2, including:
 - [x] Status updates
 - [x] Real-time messaging
 
-## :rocket: Runing the server in development mode
+## :rocket: Runing the server in release mode
 
-1. Start the database and the Redis server using Docker:
+> [!IMPORTANT]
+> Before running the server, you must have 3 network interfaces available on your machine and reachable by the clients. Those interfaces may be virtual. The example configuration in the repository uses the following IP ranges:
+>
+> - `192.168.101.0/24`
+> - `192.168.102.0/24`
+> - `192.168.103.0/24`
+
+1. Add the configuration:
+
+```bash
+cp config.yaml.template config.yaml
+```
+
+2. Update the configuration file with the correct values.
+
+3. Start the docker containers:
 
 ```bash
 docker compose up
 ```
 
-2. Run the dispatch server:
+## :hammer: Runing the server in development mode
+
+> [!IMPORTANT]
+> The same requirements regarding the network interfaces as in the release mode apply to the development mode.
+
+1. Add the configuration:
+
+```bash
+cp config-dev.yaml.template config.yaml
+```
+
+2. Update the configuration file with the correct values.
+
+3. Start the database and the Redis server using Docker:
+
+```bash
+docker compose -f docker-compose-dev.yaml up
+```
+
+4. Run the dispatch server:
 
 ```bash
 make dispatch
 ```
 
-3. Run the notification server:
+5. Run the notification server:
 
 ```bash
 make notification
 ```
 
-4. Run the switchboard server:
+6. Run the switchboard server:
 
 ```bash
 make switchboard
