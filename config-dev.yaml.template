@@ -1,0 +1,28 @@
+database:
+  host: localhost
+  port: 5432
+  user: msn_server
+  password: msn_server
+  dbname: msn_server
+  sslmode: disable
+redis:
+  host: localhost
+  port: 6379
+  password: msn_server
+  db: 0
+  pubsub_channel: switchboard
+dispatch_server:
+  server_addr: 192.168.102.1
+  server_port: 1863
+  notification_server_addr: 192.168.102.1
+  notification_server_port: 1863
+notification_server:
+  server_addr: 192.168.102.1
+  server_port: 1863
+  switchboard_server_addr: 192.168.103.1
+  switchboard_server_port: 1863
+switchboard_server:
+  server_addr: 192.168.103.1
+  server_port: 1863
+  switchboard_server_addr: 192.168.103.1
+  switchboard_server_port: 1863
