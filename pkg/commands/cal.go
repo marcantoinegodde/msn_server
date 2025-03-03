@@ -90,7 +90,7 @@ func HandleCAL(cf *config.MSNServerConfiguration, db *gorm.DB, rdb *redis.Client
 
 	// Generate an RNG message to send to NS
 	rngMsg := RNGMessage{
-		SwitchboardServerAddress: fmt.Sprintf("%s:%d", cf.SwitchboardServer.ServerAddr, cf.SwitchboardServer.ServerPort),
+		SwitchboardServerAddress: fmt.Sprintf("%s:%d", cf.SwitchboardServer.SwitchboardServerAddr, cf.SwitchboardServer.SwitchboardServerPort),
 		SessionID:                sessionId,
 		CallerEmail:              user.Email,
 		CallerDisplayName:        user.DisplayName,

@@ -46,8 +46,10 @@ type NotificationServer struct {
 }
 
 type SwitchboardServer struct {
-	ServerAddr string `mapstructure:"server_addr"`
-	ServerPort int    `mapstructure:"server_port"`
+	ServerAddr            string `mapstructure:"server_addr"`
+	ServerPort            int    `mapstructure:"server_port"`
+	SwitchboardServerAddr string `mapstructure:"switchboard_server_addr"`
+	SwitchboardServerPort int    `mapstructure:"switchboard_server_port"`
 }
 
 func LoadConfig() (*MSNServerConfiguration, error) {
