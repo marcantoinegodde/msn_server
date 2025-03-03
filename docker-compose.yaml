@@ -2,24 +2,67 @@ services:
   db:
     image: postgres:17-alpine
     restart: always
-    ports:
-      - 127.0.0.1:5432:5432
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: msn_server
       POSTGRES_PASSWORD: msn_server
       POSTGRES_DB: msn_server
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-      - 127.0.0.1:6379:6379
     environment:
       REDIS_PASSWORD: msn_server
     command: sh -c 'redis-server --requirepass $$REDIS_PASSWORD'
 
+  dispatch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 192.168.101.1:1863:1863
+    command: ["dispatch"]
+    volumes:
+      - ./config.yaml:/etc/msnserver/config.yaml
+
+  notification:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 192.168.102.1:1863:1863
+    command: ["notification"]
+    volumes:
+      - ./config.yaml:/etc/msnserver/config.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  switchboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 192.168.103.1:1863:1863
+    command: ["switchboard"]
+    volumes:
+      - ./config.yaml:/etc/msnserver/config.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   db_data:
