@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+type AckMode string
+
+const (
+	Unacknowledged              AckMode = "U"
+	NegativeAcknowledgementOnly AckMode = "N"
+	Acknowledgement             AckMode = "A"
+)
+
 func HandleMSG(sbs *sessions.SwitchboardSessions, c *clients.Client, args string) error {
 	args, msg, _ := strings.Cut(args, "\r\n")
 	tid, arguments, err := parseTransactionID(args)
@@ -29,7 +37,7 @@ func HandleMSG(sbs *sessions.SwitchboardSessions, c *clients.Client, args string
 		return err
 	}
 
-	ackMode := splitArguments[0]
+	ackMode := AckMode(splitArguments[0])
 	rawLength := splitArguments[1]
 
 	length, err := strconv.Atoi(rawLength)
@@ -46,7 +54,7 @@ func HandleMSG(sbs *sessions.SwitchboardSessions, c *clients.Client, args string
 	// Send the message to all clients in the session
 	res := fmt.Sprintf("MSG %s %s %d\r\n%s", c.Session.Email, c.Session.DisplayName, length, msg[:length])
 	if err := sbs.MessageSession(c, res); err != nil {
-		if ackMode == "A" || ackMode == "N" {
+		if ackMode == Acknowledgement || ackMode == NegativeAcknowledgementOnly {
 			HandleSendNAK(c, tid)
 		}
 		log.Println("Error:", err)
@@ -54,7 +62,7 @@ func HandleMSG(sbs *sessions.SwitchboardSessions, c *clients.Client, args string
 	}
 
 	// Send ACK if ack mode is A
-	if ackMode == "A" {
+	if ackMode == Acknowledgement {
 		HandleSendACK(c, tid)
 	}
 
