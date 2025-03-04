@@ -34,9 +34,16 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return errors.New("invalid transaction")
 	}
 
-	listName := splitArguments[0]
+	lt := ListType(splitArguments[0])
 	email := splitArguments[1]
 	displayName := splitArguments[2]
+
+	switch lt {
+	case ForwardList, AllowList, BlockList, ReverseList:
+		break
+	default:
+		return errors.New("invalid list")
+	}
 
 	if !utils.IsValidEmail(email) {
 		SendError(c, tid, ERR_INVALID_PARAMETER)
@@ -68,8 +75,8 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return query.Error
 	}
 
-	switch listName {
-	case "FL":
+	switch lt {
+	case ForwardList:
 		if len(user.ForwardList) >= MAX_FORWARD_LIST_SIZE {
 			SendError(c, tid, ERR_LIST_FULL)
 			log.Println("Error: forward list full")
@@ -100,7 +107,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		m.Lock()
 		principalClient, ok := clients[principal.Email]
 		if ok {
-			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", "RL", principal.DataVersion, user.Email, user.DisplayName)
+			res := fmt.Sprintf("ADD %s %s %d %s %s\r\n", "0", ReverseList, principal.DataVersion, user.Email, user.DisplayName)
 			principalClient.Send(res)
 		}
 		m.Unlock()
@@ -112,7 +119,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			HandleSendILN(c, tid, principal.Status, principal.Email, principal.DisplayName)
 		}
 
-	case "AL":
+	case AllowList:
 		if isMember(user.BlockList, &principal) {
 			SendError(c, tid, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
@@ -134,7 +141,7 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		}
 		m.Unlock()
 
-	case "BL":
+	case BlockList:
 		if isMember(user.AllowList, &principal) {
 			SendError(c, tid, ERR_ALREADY_IN_OPPOSITE_LIST)
 			log.Println("Error: trying to add in AL and BL")
@@ -156,17 +163,17 @@ func HandleADD(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		}
 		m.Unlock()
 
-	case "RL":
+	case ReverseList:
 		// User cannot modify reverse list
 		err := errors.New("tried to add to reverse list")
 		return err
 
 	default:
-		err := errors.New("unsupported list")
+		err := errors.New("invalid list")
 		return err
 	}
 
-	res := fmt.Sprintf("ADD %d %s %d %s %s\r\n", tid, listName, user.DataVersion, email, displayName)
+	res := fmt.Sprintf("ADD %d %s %d %s %s\r\n", tid, lt, user.DataVersion, email, displayName)
 	c.Send(res)
 
 	return nil

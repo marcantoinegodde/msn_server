@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"msnserver/pkg/clients"
 	"msnserver/pkg/database"
-	"slices"
 	"strings"
 
 	"gorm.io/gorm"
 )
 
-var listTypes = []string{"FL", "AL", "BL", "RL"}
+type ListType string
+
+const (
+	ForwardList ListType = "FL"
+	AllowList   ListType = "AL"
+	BlockList   ListType = "BL"
+	ReverseList ListType = "RL"
+)
 
 func HandleLST(db *gorm.DB, c *clients.Client, args string) error {
 	args, _, _ = strings.Cut(args, "\r\n")
@@ -25,7 +31,16 @@ func HandleLST(db *gorm.DB, c *clients.Client, args string) error {
 		return errors.New("not logged in")
 	}
 
-	if !slices.Contains(listTypes, args) {
+	splitArguments := strings.Fields(args)
+	if len(splitArguments) != 1 {
+		return errors.New("invalid transaction")
+	}
+
+	lt := ListType(splitArguments[0])
+	switch lt {
+	case ForwardList, AllowList, BlockList, ReverseList:
+		break
+	default:
 		return errors.New("invalid list")
 	}
 
@@ -37,54 +52,54 @@ func HandleLST(db *gorm.DB, c *clients.Client, args string) error {
 		return query.Error
 	}
 
-	if err := HandleSendLST(c, tid, args, &user); err != nil {
+	if err := HandleSendLST(c, tid, lt, &user); err != nil {
 		return err
 	}
 	return nil
 }
 
-func HandleSendLST(c *clients.Client, tid uint32, lt string, u *database.User) error {
+func HandleSendLST(c *clients.Client, tid uint32, lt ListType, u *database.User) error {
 	switch lt {
-	case "FL":
-		for i, f := range u.ForwardList {
-			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ForwardList), f.Email, f.DisplayName)
-			c.Send(res)
-		}
+	case ForwardList:
 		if len(u.ForwardList) == 0 {
 			res := fmt.Sprintf("LST %d %s %d %d %d\r\n", tid, lt, u.DataVersion, 0, 0)
 			c.Send(res)
 		}
-		return nil
-
-	case "AL":
-		for i, a := range u.AllowList {
-			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.AllowList), a.Email, a.DisplayName)
+		for i, f := range u.ForwardList {
+			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ForwardList), f.Email, f.DisplayName)
 			c.Send(res)
 		}
+		return nil
+
+	case AllowList:
 		if len(u.AllowList) == 0 {
 			res := fmt.Sprintf("LST %d %s %d %d %d\r\n", tid, lt, u.DataVersion, 0, 0)
 			c.Send(res)
 		}
-		return nil
-
-	case "BL":
-		for i, b := range u.BlockList {
-			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.BlockList), b.Email, b.DisplayName)
+		for i, a := range u.AllowList {
+			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.AllowList), a.Email, a.DisplayName)
 			c.Send(res)
 		}
+		return nil
+
+	case BlockList:
 		if len(u.BlockList) == 0 {
 			res := fmt.Sprintf("LST %d %s %d %d %d\r\n", tid, lt, u.DataVersion, 0, 0)
 			c.Send(res)
 		}
-		return nil
-
-	case "RL":
-		for i, r := range u.ReverseList {
-			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ReverseList), r.Email, r.DisplayName)
+		for i, b := range u.BlockList {
+			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.BlockList), b.Email, b.DisplayName)
 			c.Send(res)
 		}
+		return nil
+
+	case ReverseList:
 		if len(u.ReverseList) == 0 {
 			res := fmt.Sprintf("LST %d %s %d %d %d\r\n", tid, lt, u.DataVersion, 0, 0)
+			c.Send(res)
+		}
+		for i, r := range u.ReverseList {
+			res := fmt.Sprintf("LST %d %s %d %d %d %s %s\r\n", tid, lt, u.DataVersion, i+1, len(u.ReverseList), r.Email, r.DisplayName)
 			c.Send(res)
 		}
 		return nil

@@ -29,8 +29,15 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return errors.New("invalid transaction")
 	}
 
-	listName := splitArguments[0]
+	lt := ListType(splitArguments[0])
 	email := splitArguments[1]
+
+	switch lt {
+	case ForwardList, AllowList, BlockList, ReverseList:
+		break
+	default:
+		return errors.New("invalid list")
+	}
 
 	var user database.User
 	query := db.First(&user, "email = ?", c.Session.Email)
@@ -40,8 +47,8 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return query.Error
 	}
 
-	switch listName {
-	case "FL":
+	switch lt {
+	case ForwardList:
 		// Find principal to remove from forward list
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("ForwardList").Find(&principal)
@@ -77,12 +84,12 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		m.Lock()
 		principalClient, ok := clients[principal.Email]
 		if ok {
-			res := fmt.Sprintf("REM %s %s %d %s\r\n", "0", "RL", principal.DataVersion, user.Email)
+			res := fmt.Sprintf("REM %s %s %d %s\r\n", "0", ReverseList, principal.DataVersion, user.Email)
 			principalClient.Send(res)
 		}
 		m.Unlock()
 
-	case "AL":
+	case AllowList:
 		// Find principal to remove from allow list
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("AllowList").Find(&principal)
@@ -103,7 +110,7 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			return err
 		}
 
-	case "BL":
+	case BlockList:
 		// Find principal to remove from block list
 		var principal database.User
 		err := db.Model(&user).Where("email = ?", email).Association("BlockList").Find(&principal)
@@ -124,17 +131,17 @@ func HandleREM(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 			return err
 		}
 
-	case "RL":
+	case ReverseList:
 		// User cannot modify reverse list
-		err := errors.New("tried to add to reverse list")
+		err := errors.New("tried to remove from reverse list")
 		return err
 
 	default:
-		err := errors.New("unsupported list")
+		err := errors.New("invalid list")
 		return err
 	}
 
-	res := fmt.Sprintf("REM %d %s %d %s\r\n", tid, listName, user.DataVersion, email)
+	res := fmt.Sprintf("REM %d %s %d %s\r\n", tid, lt, user.DataVersion, email)
 	c.Send(res)
 
 	return nil

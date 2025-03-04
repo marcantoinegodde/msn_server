@@ -11,9 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func HandleSYN(db *gorm.DB, c *clients.Client, arguments string) error {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, arguments, err := parseTransactionID(arguments)
+func HandleSYN(db *gorm.DB, c *clients.Client, args string) error {
+	args, _, _ = strings.Cut(args, "\r\n")
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,12 @@ func HandleSYN(db *gorm.DB, c *clients.Client, arguments string) error {
 		return errors.New("not logged in")
 	}
 
-	version, err := strconv.Atoi(arguments)
+	splitArguments := strings.Fields(args)
+	if len(splitArguments) != 1 {
+		return errors.New("invalid transaction")
+	}
+
+	version, err := strconv.Atoi(splitArguments[0])
 	if err != nil {
 		return err
 	}
@@ -49,13 +54,13 @@ func HandleSYN(db *gorm.DB, c *clients.Client, arguments string) error {
 		HandleSendBLP(c, tid, user.DataVersion, user.Blp)
 
 		// Send LST FL
-		HandleSendLST(c, tid, "FL", &user)
+		HandleSendLST(c, tid, ForwardList, &user)
 		// Send LST AL
-		HandleSendLST(c, tid, "AL", &user)
+		HandleSendLST(c, tid, AllowList, &user)
 		// Send LST BL
-		HandleSendLST(c, tid, "BL", &user)
+		HandleSendLST(c, tid, BlockList, &user)
 		// Send LST RL
-		HandleSendLST(c, tid, "RL", &user)
+		HandleSendLST(c, tid, ReverseList, &user)
 	}
 
 	return nil
