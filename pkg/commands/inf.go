@@ -8,9 +8,9 @@ import (
 
 var supportedSecurityPackages = []string{"MD5"}
 
-func HandleINF(c *clients.Client, arguments string) error {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, _, err := parseTransactionID(arguments)
+func HandleINF(c *clients.Client, args string) error {
+	args, _, _ = strings.Cut(args, "\r\n")
+	tid, _, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}

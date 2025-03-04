@@ -29,9 +29,9 @@ sent by the user. This could be improved later if we need to associate
 a user account to a specific NS.
 */
 
-func HandleUSRDispatch(arguments string) (uint32, error) {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, _, err := parseTransactionID(arguments)
+func HandleUSRDispatch(args string) (uint32, error) {
+	args, _, _ = strings.Cut(args, "\r\n")
+	tid, _, err := parseTransactionID(args)
 	if err != nil {
 		return 0, err
 	}
@@ -39,9 +39,9 @@ func HandleUSRDispatch(arguments string) (uint32, error) {
 	return tid, nil
 }
 
-func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, arguments string) error {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, arguments, err := parseTransactionID(arguments)
+func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, args string) error {
+	args, _, _ = strings.Cut(args, "\r\n")
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 
 	// Parse arguments
-	splitArguments := strings.Fields(arguments)
+	splitArguments := strings.Fields(args)
 	if len(splitArguments) != 3 {
 		err := errors.New("invalid transaction")
 		return err
@@ -127,9 +127,9 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 	}
 }
 
-func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.Client, arguments string) error {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, arguments, err := parseTransactionID(arguments)
+func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.Client, args string) error {
+	args, _, _ = strings.Cut(args, "\r\n")
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.Switchbo
 	}
 
 	// Parse arguments
-	splitArguments := strings.Fields(arguments)
+	splitArguments := strings.Fields(args)
 	if len(splitArguments) != 2 {
 		err := errors.New("invalid transaction")
 		return err

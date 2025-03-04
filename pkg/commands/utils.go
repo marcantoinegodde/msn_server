@@ -12,8 +12,8 @@ type cki struct {
 	SessionID uint32 `json:"session_id"`
 }
 
-func parseTransactionID(arguments string) (uint32, string, error) {
-	rawTid, arguments, _ := strings.Cut(arguments, " ")
+func parseTransactionID(args string) (uint32, string, error) {
+	rawTid, args, _ := strings.Cut(args, " ")
 
 	parsedTid, err := strconv.ParseUint(rawTid, 10, 32)
 	if err != nil {
@@ -21,7 +21,7 @@ func parseTransactionID(arguments string) (uint32, string, error) {
 	}
 	tid := uint32(parsedTid)
 
-	return tid, arguments, nil
+	return tid, args, nil
 }
 
 func parseSessionID(sessionID string) (uint32, error) {

@@ -20,7 +20,7 @@ const (
 
 func HandleMSG(sbs *sessions.SwitchboardSessions, c *clients.Client, args string) error {
 	args, msg, _ := strings.Cut(args, "\r\n")
-	tid, arguments, err := parseTransactionID(args)
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func HandleMSG(sbs *sessions.SwitchboardSessions, c *clients.Client, args string
 	}
 
 	// Parse arguments
-	splitArguments := strings.Fields(arguments)
+	splitArguments := strings.Fields(args)
 	if len(splitArguments) != 2 {
 		err := errors.New("invalid transaction")
 		return err

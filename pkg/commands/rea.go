@@ -32,7 +32,8 @@ func HandleREA(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return errors.New("invalid transaction")
 	}
 
-	email, newDisplayName := splitArguments[0], splitArguments[1]
+	email := splitArguments[0]
+	newDisplayName := splitArguments[1]
 
 	if _, err := url.PathUnescape(newDisplayName); err != nil {
 		return errors.New("invalid new name")

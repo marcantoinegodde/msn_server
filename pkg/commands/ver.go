@@ -9,13 +9,13 @@ import (
 
 var supportedProtocols = []string{"MSNP2", "CVR0"}
 
-func HandleVER(c *clients.Client, arguments string) error {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, arguments, err := parseTransactionID(arguments)
+func HandleVER(c *clients.Client, args string) error {
+	args, _, _ = strings.Cut(args, "\r\n")
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
-	clientProtocols := strings.Fields(arguments)
+	clientProtocols := strings.Fields(args)
 
 	serverProtocols := []string{}
 	for _, protocol := range clientProtocols {
