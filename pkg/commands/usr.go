@@ -16,6 +16,29 @@ import (
 	"gorm.io/gorm"
 )
 
+type SequenceValue string
+
+const (
+	Initiate   SequenceValue = "I"
+	Subsequent SequenceValue = "S"
+)
+
+/*
+For now, we just return the tid without actually parsing the USR command
+sent by the user. This could be improved later if we need to associate
+a user account to a specific NS.
+*/
+
+func HandleUSRDispatch(arguments string) (uint32, error) {
+	arguments, _, _ = strings.Cut(arguments, "\r\n")
+	tid, _, err := parseTransactionID(arguments)
+	if err != nil {
+		return 0, err
+	}
+
+	return tid, nil
+}
+
 func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
 	tid, arguments, err := parseTransactionID(arguments)
@@ -36,25 +59,25 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return err
 	}
 
-	var authMethod = splitArguments[0]
-	var authState = splitArguments[1]
+	var sp = splitArguments[0]
+	var sv = SequenceValue(splitArguments[1])
 	var password string
 
-	// Validate authentication method
-	if !slices.Contains(supportedAuthMethods, authMethod) {
-		err := errors.New("unsupported authentication method")
+	// Validate security package
+	if !slices.Contains(supportedSecurityPackages, sp) {
+		err := errors.New("unsupported security package")
 		return err
 	}
 
-	switch authState {
-	case "I":
+	switch sv {
+	case Initiate:
 		c.Session.Email = splitArguments[2]
 
-	case "S":
+	case Subsequent:
 		password = splitArguments[2]
 
 	default:
-		err := errors.New("invalid auth state")
+		err := errors.New("invalid sequence value")
 		return err
 	}
 
@@ -67,13 +90,13 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return query.Error
 	}
 
-	switch authState {
-	case "I":
-		res := fmt.Sprintf("USR %d %s %s %s\r\n", tid, authMethod, "S", user.Salt)
+	switch sv {
+	case Initiate:
+		res := fmt.Sprintf("USR %d %s %s %s\r\n", tid, sp, Subsequent, user.Salt)
 		c.Send(res)
 		return nil
 
-	case "S":
+	case Subsequent:
 		if user.Password != password {
 			SendError(c, tid, ERR_AUTHENTICATION_FAILED)
 			return errors.New("invalid password")
@@ -99,25 +122,9 @@ func HandleUSR(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return nil
 
 	default:
-		err := errors.New("invalid auth state")
+		err := errors.New("invalid sequence value")
 		return err
 	}
-}
-
-/*
-For now, we just return the tid without actually parsing the USR command
-sent by the user. This could be improved later if we need to associate
-a user account to a specific NS.
-*/
-
-func HandleUSRDispatch(arguments string) (uint32, error) {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, _, err := parseTransactionID(arguments)
-	if err != nil {
-		return 0, err
-	}
-
-	return tid, nil
 }
 
 func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions, c *clients.Client, arguments string) error {
