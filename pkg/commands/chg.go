@@ -25,8 +25,13 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		return errors.New("not logged in")
 	}
 
+	splitArguments := strings.Fields(args)
+	if len(splitArguments) != 1 {
+		return errors.New("invalid transaction")
+	}
+
 	// User isn't allowed to change their status to FLN
-	status := database.Status(args)
+	status := database.Status(splitArguments[0])
 	switch status {
 	case database.NLN, database.HDN, database.IDL, database.AWY, database.BSY, database.BRB, database.PHN, database.LUN:
 		break
@@ -37,7 +42,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 
 	// Perform nested preloading to load users lists of contacts on user's forward list
 	var user database.User
-	query := db.Preload("ForwardList.ForwardList").Preload("ForwardList.AllowList").Preload("ForwardList.BlockList").Preload("ReverseList").First(&user, "email = ?", c.Session.Email)
+	query := db.Preload("ForwardList.AllowList").Preload("ForwardList.BlockList").First(&user, "email = ?", c.Session.Email)
 	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
 		return errors.New("user not found")
 	} else if query.Error != nil {
@@ -78,7 +83,7 @@ func HandleCHG(db *gorm.DB, m *sync.Mutex, clients map[string]*clients.Client, c
 		}
 	}
 
-	// Inform followers (RL) of the database.status change
+	// Inform followers (RL) of the status change
 	if user.Status == database.HDN {
 		if err := HandleBatchFLN(db, m, clients, c); err != nil {
 			log.Println("Error:", err)
