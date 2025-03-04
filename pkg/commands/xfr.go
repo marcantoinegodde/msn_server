@@ -26,9 +26,9 @@ func HandleXFRDispatch(cf config.DispatchServer, c *clients.Client, tid uint32) 
 	c.Send(res)
 }
 
-func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *clients.Client, arguments string) error {
-	arguments, _, _ = strings.Cut(arguments, "\r\n")
-	tid, arguments, err := parseTransactionID(arguments)
+func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *clients.Client, args string) error {
+	args, _, _ = strings.Cut(args, "\r\n")
+	tid, args, err := parseTransactionID(args)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,14 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 		return errors.New("not logged in")
 	}
 
-	if arguments != "SB" {
+	splitArguments := strings.Fields(args)
+	if len(splitArguments) != 1 {
+		return errors.New("invalid transaction")
+	}
+
+	referralType := splitArguments[0]
+
+	if referralType != "SB" {
 		SendError(c, tid, ERR_INVALID_PARAMETER)
 		return errors.New("invalid parameter")
 	}

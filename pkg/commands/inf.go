@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var supportedAuthMethods = []string{"MD5"}
+var supportedSecurityPackages = []string{"MD5"}
 
 func HandleINF(c *clients.Client, arguments string) error {
 	arguments, _, _ = strings.Cut(arguments, "\r\n")
@@ -15,7 +15,7 @@ func HandleINF(c *clients.Client, arguments string) error {
 		return err
 	}
 
-	res := fmt.Sprintf("INF %d %s\r\n", tid, strings.Join(supportedAuthMethods, " "))
+	res := fmt.Sprintf("INF %d %s\r\n", tid, strings.Join(supportedSecurityPackages, " "))
 	c.Send(res)
 	return nil
 }

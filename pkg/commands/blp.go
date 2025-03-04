@@ -22,7 +22,12 @@ func HandleBLP(db *gorm.DB, c *clients.Client, args string) error {
 		return errors.New("not logged in")
 	}
 
-	blp := database.Blp(args)
+	splitArguments := strings.Fields(args)
+	if len(splitArguments) != 1 {
+		return errors.New("invalid transaction")
+	}
+
+	blp := database.Blp(splitArguments[0])
 	switch blp {
 	case database.AL, database.BL:
 		break

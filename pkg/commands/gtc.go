@@ -22,7 +22,12 @@ func HandleGTC(db *gorm.DB, c *clients.Client, args string) error {
 		return errors.New("not logged in")
 	}
 
-	gtc := database.Gtc(args)
+	splitArguments := strings.Fields(args)
+	if len(splitArguments) != 1 {
+		return errors.New("invalid transaction")
+	}
+
+	gtc := database.Gtc(splitArguments[0])
 	switch gtc {
 	case database.A, database.N:
 		break
