@@ -50,12 +50,13 @@ func (sbs *SwitchboardSessions) JoinSession(c *clients.Client, sessionID uint32)
 		return nil, errors.New("session not found")
 	}
 
-	// Copy session before joining it
-	s := sbs.sessions[sessionID]
-
 	// Join session
 	sbs.sessions[sessionID] = append(sbs.sessions[sessionID], c)
 	sbs.clientsSession[c.Id] = sessionID
+
+	// Deep copy session without the new client
+	s := make([]*clients.Client, len(sbs.sessions[sessionID])-1)
+	copy(s, sbs.sessions[sessionID][:len(sbs.sessions[sessionID])-1])
 
 	return s, nil
 }

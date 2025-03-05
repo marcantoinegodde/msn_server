@@ -87,6 +87,7 @@ func HandleANS(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions
 	c.Session.Authenticated = true
 
 	// Send initial roaster information to the client
+	// Even if clients disconnect in the meantime, pointers to the clients are still valid
 	HandleSendIRO(c, tid, s)
 
 	// Send join notification to all clients in the session
