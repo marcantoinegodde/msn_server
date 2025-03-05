@@ -58,24 +58,27 @@ func (sbs *SwitchboardSessions) JoinSession(c *clients.Client, sessionID uint32)
 	s := make([]*clients.Client, len(sbs.sessions[sessionID])-1)
 	copy(s, sbs.sessions[sessionID][:len(sbs.sessions[sessionID])-1])
 
+	// Notify existing clients in session
+	HandleSendJOI(c, s)
+
 	return s, nil
 }
 
-func (sbs *SwitchboardSessions) LeaveSession(c *clients.Client) ([]*clients.Client, error) {
+func (sbs *SwitchboardSessions) LeaveSession(c *clients.Client) error {
 	sbs.m.Lock()
 	defer sbs.m.Unlock()
 
 	// Get session ID
 	sessionID, ok := sbs.clientsSession[c.Id]
 	if !ok {
-		return nil, errors.New("client not in session")
+		return errors.New("client not in session")
 	}
 
 	// Cleanup session if client is the last one
 	if len(sbs.sessions[sessionID]) == 1 {
 		delete(sbs.sessions, sessionID)
 		delete(sbs.clientsSession, c.Id)
-		return nil, nil
+		return nil
 	}
 
 	// Otherwise, remove client from session
@@ -85,10 +88,12 @@ func (sbs *SwitchboardSessions) LeaveSession(c *clients.Client) ([]*clients.Clie
 			break
 		}
 	}
-
 	delete(sbs.clientsSession, c.Id)
 
-	return sbs.sessions[sessionID], nil
+	// Notify remaining clients in session
+	HandleSendBYE(c, sbs.sessions[sessionID])
+
+	return nil
 }
 
 func (sbs *SwitchboardSessions) MessageSession(c *clients.Client, res string) error {

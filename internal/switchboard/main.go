@@ -56,12 +56,9 @@ func (ss *SwitchboardServer) handleConnection(conn net.Conn) {
 
 	defer func() {
 		if c.Session.Authenticated {
-			s, err := ss.sbs.LeaveSession(c)
-			if err != nil {
+			if err := ss.sbs.LeaveSession(c); err != nil {
 				log.Println("Error leaving session:", err)
 			}
-
-			commands.HandleSendBYE(c, s)
 		}
 
 		c.Disconnect()

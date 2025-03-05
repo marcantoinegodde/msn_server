@@ -90,9 +90,6 @@ func HandleANS(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions
 	// Even if clients disconnect in the meantime, pointers to the clients are still valid
 	HandleSendIRO(c, tid, s)
 
-	// Send join notification to all clients in the session
-	HandleSendJOI(c, s)
-
 	res := fmt.Sprintf("ANS %d OK\r\n", tid)
 	c.Send(res)
 
