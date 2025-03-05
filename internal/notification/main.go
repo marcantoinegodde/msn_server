@@ -60,7 +60,7 @@ func (ns *NotificationServer) handleConnection(conn net.Conn) {
 	c := clients.NewClient(conn)
 
 	defer func() {
-		if c.Session.Email != "" {
+		if c.Session.Authenticated {
 			var user database.User
 			query := ns.db.First(&user, "email = ?", c.Session.Email)
 			if query.Error == nil {

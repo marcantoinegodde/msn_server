@@ -55,12 +55,14 @@ func (ss *SwitchboardServer) handleConnection(conn net.Conn) {
 	c := clients.NewClient(conn)
 
 	defer func() {
-		s, err := ss.sbs.LeaveSession(c)
-		if err != nil {
-			log.Println("Error leaving session:", err)
-		}
+		if c.Session.Authenticated {
+			s, err := ss.sbs.LeaveSession(c)
+			if err != nil {
+				log.Println("Error leaving session:", err)
+			}
 
-		commands.HandleSendBYE(c, s)
+			commands.HandleSendBYE(c, s)
+		}
 
 		c.Disconnect()
 	}()
