@@ -175,13 +175,13 @@ func HandleUSRSwitchboard(db *gorm.DB, rdb *redis.Client, sbs *sessions.Switchbo
 		return err
 	}
 
-	// Create Switchboard session
-	sbs.CreateSession(c)
-
 	// Update client session
 	c.Session.Email = user.Email
 	c.Session.DisplayName = user.DisplayName
 	c.Session.Authenticated = true
+
+	// Create Switchboard session
+	sbs.CreateSession(c)
 
 	res := fmt.Sprintf("USR %d OK %s %s\r\n", tid, user.Email, user.DisplayName)
 	c.Send(res)

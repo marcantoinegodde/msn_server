@@ -75,16 +75,16 @@ func HandleANS(db *gorm.DB, rdb *redis.Client, sbs *sessions.SwitchboardSessions
 		return err
 	}
 
+	// Update client session
+	c.Session.Email = user.Email
+	c.Session.DisplayName = user.DisplayName
+	c.Session.Authenticated = true
+
 	// Join session
 	s, err := sbs.JoinSession(c, sid)
 	if err != nil {
 		return err
 	}
-
-	// Update client session
-	c.Session.Email = user.Email
-	c.Session.DisplayName = user.DisplayName
-	c.Session.Authenticated = true
 
 	// Send initial roaster information to the client
 	// Even if clients disconnect in the meantime, pointers to the clients are still valid
