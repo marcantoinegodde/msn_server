@@ -5,6 +5,7 @@ import (
 	"msnserver/cmd/dispatch"
 	"msnserver/cmd/notification"
 	"msnserver/cmd/switchboard"
+	"msnserver/cmd/web"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -21,6 +22,7 @@ func init() {
 	rootCmd.AddCommand(dispatch.BuildDispatchCmd())
 	rootCmd.AddCommand(notification.BuildNotificationCmd())
 	rootCmd.AddCommand(switchboard.BuildSwitchboardCmd())
+	rootCmd.AddCommand(web.BuildWebCmd())
 }
 
 func Execute() {

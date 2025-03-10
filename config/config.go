@@ -12,6 +12,7 @@ type MSNServerConfiguration struct {
 	DispatchServer     DispatchServer     `mapstructure:"dispatch_server"`
 	NotificationServer NotificationServer `mapstructure:"notification_server"`
 	SwitchboardServer  SwitchboardServer  `mapstructure:"switchboard_server"`
+	WebServer          WebServer          `mapstructure:"web_server"`
 }
 
 type Database struct {
@@ -50,6 +51,10 @@ type SwitchboardServer struct {
 	ServerPort            int    `mapstructure:"server_port"`
 	SwitchboardServerAddr string `mapstructure:"switchboard_server_addr"`
 	SwitchboardServerPort int    `mapstructure:"switchboard_server_port"`
+}
+
+type WebServer struct {
+	JWTSecret string `mapstructure:"jwt_secret"`
 }
 
 func LoadConfig() (*MSNServerConfiguration, error) {

@@ -21,3 +21,11 @@ switchboard:
 .PHONY: switchboard-debug
 switchboard-debug:
 	air -c .air.debug.toml -build.args_bin=switchboard
+
+.PHONY: web
+web:
+	air -build.args_bin=web
+
+.PHONY: web-debug
+web-debug:
+	air -c .air.debug.toml -build.args_bin=web

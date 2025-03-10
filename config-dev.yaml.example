@@ -26,3 +26,5 @@ switchboard_server:
   server_port: 1863
   switchboard_server_addr: 192.168.103.1
   switchboard_server_port: 1863
+web_server:
+  jwt_secret: msn_server
