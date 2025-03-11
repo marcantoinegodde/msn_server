@@ -1,4 +1,4 @@
-import keys from "../icons/keys.png";
+import keys from "@/icons/keys.png";
 
 function LoginWindows() {
   return (
