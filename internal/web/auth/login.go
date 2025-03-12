@@ -10,28 +10,33 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type jwtCustomClaims struct {
+type JwtCustomClaims struct {
 	Name string `json:"name"`
 	jwt.RegisteredClaims
 }
 
+type LoginCredentials struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func (ac *AuthController) Login(c echo.Context) error {
-	var u User
-	if err := c.Bind(&u); err != nil {
+	var lc LoginCredentials
+	if err := c.Bind(&lc); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var user database.User
-	if err := ac.db.Where("email = ?", u.Email).First(&user).Error; err != nil {
+	if err := ac.db.Where("email = ?", lc.Email).First(&user).Error; err != nil {
 		return c.String(http.StatusUnauthorized, "unauthorized")
 	}
 
-	hashedPassword := hashPassword(user.Salt, u.Password)
+	hashedPassword := hashPassword(user.Salt, lc.Password)
 	if hashedPassword != user.Password {
 		return c.String(http.StatusUnauthorized, "unauthorized")
 	}
 
-	claims := &jwtCustomClaims{
+	claims := &JwtCustomClaims{
 		Name: fmt.Sprintf("%s %s", user.FirstName, user.LastName),
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -48,7 +53,16 @@ func (ac *AuthController) Login(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
-		"token": t,
-	})
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    t,
+		Expires:  claims.ExpiresAt.Time,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	c.SetCookie(cookie)
+
+	return c.String(http.StatusOK, "login success")
 }
