@@ -28,10 +28,11 @@ func HandleSYN(db *gorm.DB, c *clients.Client, args string) error {
 		return errors.New("invalid transaction")
 	}
 
-	version, err := strconv.Atoi(splitArguments[0])
+	parsedVersion, err := strconv.ParseUint(splitArguments[0], 10, 32)
 	if err != nil {
 		return err
 	}
+	version := uint32(parsedVersion)
 
 	var user database.User
 	query := db.Preload("ForwardList").Preload("AllowList").Preload("BlockList").Preload("ReverseList").First(&user, "email = ?", c.Session.Email)
@@ -44,7 +45,7 @@ func HandleSYN(db *gorm.DB, c *clients.Client, args string) error {
 	res := fmt.Sprintf("SYN %d %d\r\n", tid, user.DataVersion)
 	c.Send(res)
 
-	if uint32(version) != user.DataVersion {
+	if version != user.DataVersion {
 		// Start user's data synchronization
 
 		// Send GTC
