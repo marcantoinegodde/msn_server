@@ -54,7 +54,9 @@ type SwitchboardServer struct {
 }
 
 type WebServer struct {
-	JWTSecret string `mapstructure:"jwt_secret"`
+	Env            string   `mapstructure:"env"`
+	JWTSecret      string   `mapstructure:"jwt_secret"`
+	AllowedOrigins []string `mapstructure:"allowed_origins"`
 }
 
 func LoadConfig() (*MSNServerConfiguration, error) {

@@ -30,7 +30,8 @@ func (ws *WebServer) Start() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"}, // TODO: Add configuration
+		AllowOrigins:     ws.c.WebServer.AllowedOrigins,
+		AllowCredentials: true,
 	}))
 
 	// Register custom validator
