@@ -2,11 +2,12 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import "98.css";
-import "./index.css";
+import "@/index.css";
 
 // Import the generated route tree
-import { routeTree } from "./routeTree.gen";
+import { routeTree } from "@/routeTree.gen";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/hooks/useAuth";

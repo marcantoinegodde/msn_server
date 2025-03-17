@@ -1,5 +1,6 @@
 import axios from "axios";
-import { PostMeResponse } from "./types";
+
+import { PostMeResponse } from "@/repositories/user/types";
 
 export const postMe = async () => {
   const response = await axios.get<PostMeResponse>(
