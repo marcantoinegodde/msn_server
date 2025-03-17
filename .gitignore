@@ -6,4 +6,5 @@
 /msnserver
 
 # Config
+.env
 config.yaml
