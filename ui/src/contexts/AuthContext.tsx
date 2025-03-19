@@ -21,6 +21,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const meQuery = useQuery({
     queryKey: queryKeys.me,
     queryFn: postMe,
+    retry: false,
   });
 
   const login = () => {

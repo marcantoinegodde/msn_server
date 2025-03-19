@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 
 import keys from "@/icons/keys.png";
 import { queryKeys } from "@/repositories/queryKeys";
@@ -92,7 +93,17 @@ function RouteComponent() {
               </fieldset>
             </div>
           </div>
-          <div className="flex justify-end mt-2.5">
+          <div className="flex justify-between items-center gap-2 mt-2.5">
+            <div className="truncate">
+              {loginMutation.isError &&
+                axios.isAxiosError(loginMutation.error) && (
+                  <div className="text-red-500">
+                    {loginMutation.error.response?.status === 401
+                      ? "Invalid email or password."
+                      : "Something went wrong."}
+                  </div>
+                )}
+            </div>
             <button type="submit">
               {loginMutation.isPending ? "Loading..." : "OK"}
             </button>
