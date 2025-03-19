@@ -64,5 +64,20 @@ services:
       redis:
         condition: service_started
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 192.168.100.1:8080:8080
+    command: ["web"]
+    volumes:
+      - ./config.yaml:/etc/msnserver/config.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+
+
 volumes:
   db_data:

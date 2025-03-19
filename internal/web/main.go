@@ -1,9 +1,11 @@
 package web
 
 import (
+	"embed"
 	"msnserver/config"
 	"msnserver/internal/web/auth"
 	"msnserver/internal/web/user"
+	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -12,6 +14,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/gorm"
 )
+
+//go:embed all:dist
+var ui embed.FS
 
 type WebServer struct {
 	c  *config.MSNServerConfiguration
@@ -32,6 +37,11 @@ func (ws *WebServer) Start() {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     ws.c.WebServer.AllowedOrigins,
 		AllowCredentials: true,
+	}))
+	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		HTML5:      true,
+		Root:       "dist",
+		Filesystem: http.FS(ui),
 	}))
 
 	// Register custom validator

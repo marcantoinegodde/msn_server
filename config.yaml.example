@@ -29,3 +29,4 @@ switchboard_server:
 web_server:
   env: production
   jwt_secret: msn_server
+  allowed_origins: []
