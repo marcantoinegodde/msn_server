@@ -12,7 +12,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => {
     return (
       <div className="min-h-screen flex justify-center items-center bg-[#3a6ea5]">
-        <div className="p-2">
+        <div className="flex flex-col items-center p-2 w-full">
           <Outlet />
         </div>
       </div>
