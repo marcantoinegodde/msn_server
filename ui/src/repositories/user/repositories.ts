@@ -1,9 +1,9 @@
 import axios from "axios";
 
-import { PostMeResponse } from "@/repositories/user/types";
+import { GetMeResponse } from "@/repositories/user/types";
 
-export const postMe = async () => {
-  const response = await axios.get<PostMeResponse>(
+export const getMe = async () => {
+  const response = await axios.get<GetMeResponse>(
     `${import.meta.env.VITE_API_URL}/user/me`,
     { withCredentials: true }
   );

@@ -1,4 +1,4 @@
-export type PostMeResponse = {
+export type GetMeResponse = {
   email: string;
   first_name: string;
   last_name: string;

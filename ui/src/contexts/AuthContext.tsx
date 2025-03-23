@@ -2,12 +2,12 @@ import { useState, useEffect, createContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/repositories/queryKeys";
-import { postMe } from "@/repositories/user/repositories";
-import { PostMeResponse } from "@/repositories/user/types";
+import { getMe } from "@/repositories/user/repositories";
+import { GetMeResponse } from "@/repositories/user/types";
 
 export interface AuthContext {
   isAuthenticated: boolean;
-  user: PostMeResponse | undefined;
+  user: GetMeResponse | undefined;
   login: () => void;
   logout: () => void;
 }
@@ -15,12 +15,12 @@ export interface AuthContext {
 const AuthContext = createContext<AuthContext | null>(null);
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<PostMeResponse>();
+  const [user, setUser] = useState<GetMeResponse>();
   const isAuthenticated = !!user;
 
   const meQuery = useQuery({
     queryKey: queryKeys.me,
-    queryFn: postMe,
+    queryFn: getMe,
     retry: false,
   });
 
