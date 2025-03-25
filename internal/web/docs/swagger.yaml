@@ -162,7 +162,7 @@ paths:
       summary: Healthz route
       tags:
       - misc
-  /user/me:
+  /user/account:
     get:
       description: Get the user information
       produces:
@@ -176,7 +176,7 @@ paths:
           description: internal server error
           schema:
             type: string
-      summary: Me route
+      summary: Account route
       tags:
       - user
 swagger: "2.0"

@@ -178,7 +178,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/me": {
+        "/user/account": {
             "get": {
                 "description": "Get the user information",
                 "produces": [
@@ -187,7 +187,7 @@ const docTemplate = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "Me route",
+                "summary": "Account route",
                 "responses": {
                     "200": {
                         "description": "OK",

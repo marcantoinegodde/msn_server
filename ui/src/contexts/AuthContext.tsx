@@ -2,12 +2,12 @@ import { useState, useEffect, createContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/repositories/queryKeys";
-import { getMe } from "@/repositories/user/repositories";
-import { GetMeResponse } from "@/repositories/user/types";
+import { getAccount } from "@/repositories/user/repositories";
+import { GetAccountResponse } from "@/repositories/user/types";
 
 export interface AuthContext {
   isAuthenticated: boolean;
-  user: GetMeResponse | undefined;
+  user: GetAccountResponse | undefined;
   login: () => void;
   logout: () => void;
 }
@@ -15,31 +15,31 @@ export interface AuthContext {
 const AuthContext = createContext<AuthContext | null>(null);
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<GetMeResponse>();
+  const [user, setUser] = useState<GetAccountResponse>();
   const isAuthenticated = !!user;
 
-  const meQuery = useQuery({
-    queryKey: queryKeys.me,
-    queryFn: getMe,
+  const accountQuery = useQuery({
+    queryKey: queryKeys.account,
+    queryFn: getAccount,
     retry: false,
   });
 
   const login = () => {
-    meQuery.refetch();
+    accountQuery.refetch();
   };
 
   const logout = () => {
-    meQuery.refetch();
+    accountQuery.refetch();
   };
 
   useEffect(() => {
-    if (meQuery.isSuccess) {
-      setUser(meQuery.data);
+    if (accountQuery.isSuccess) {
+      setUser(accountQuery.data);
     }
-    if (meQuery.isError) {
+    if (accountQuery.isError) {
       setUser(undefined);
     }
-  }, [meQuery.isSuccess, meQuery.isError, meQuery.data]);
+  }, [accountQuery.isSuccess, accountQuery.isError, accountQuery.data]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>

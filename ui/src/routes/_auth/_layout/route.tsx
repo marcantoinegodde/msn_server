@@ -13,16 +13,9 @@ import users from "@/icons/users.png";
 import padlock from "@/icons/padlock.png";
 import { useAuth } from "@/hooks/useAuth";
 import { queryKeys } from "@/repositories/queryKeys";
-import { getMe } from "@/repositories/user/repositories";
 import { postLogout } from "@/repositories/auth/repositories";
 
 export const Route = createFileRoute("/_auth/_layout")({
-  loader: ({ context }) => {
-    context.queryClient.ensureQueryData({
-      queryKey: queryKeys.me,
-      queryFn: getMe,
-    });
-  },
   component: RouteComponent,
 });
 

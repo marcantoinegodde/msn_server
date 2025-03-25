@@ -1,10 +1,10 @@
 import axios from "axios";
 
-import { GetMeResponse } from "@/repositories/user/types";
+import { GetAccountResponse } from "@/repositories/user/types";
 
-export const getMe = async () => {
-  const response = await axios.get<GetMeResponse>(
-    `${import.meta.env.VITE_API_URL}/user/me`,
+export const getAccount = async () => {
+  const response = await axios.get<GetAccountResponse>(
+    `${import.meta.env.VITE_API_URL}/user/account`,
     { withCredentials: true }
   );
   return response.data;

@@ -4,13 +4,13 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import userDetails from "@/icons/user_details.png";
 import { queryKeys } from "@/repositories/queryKeys";
-import { getMe } from "@/repositories/user/repositories";
+import { getAccount } from "@/repositories/user/repositories";
 
 export const Route = createFileRoute("/_auth/_layout/details")({
   loader: ({ context }) =>
     context.queryClient.ensureQueryData({
-      queryKey: queryKeys.me,
-      queryFn: getMe,
+      queryKey: queryKeys.account,
+      queryFn: getAccount,
     }),
   component: RouteComponent,
 });
@@ -319,12 +319,12 @@ function RouteComponent() {
   const stateId = useId();
   const cityId = useId();
 
-  const meQuery = useSuspenseQuery({
-    queryKey: queryKeys.me,
-    queryFn: getMe,
+  const accountQuery = useSuspenseQuery({
+    queryKey: queryKeys.account,
+    queryFn: getAccount,
   });
 
-  const [country, setCountry] = useState<string>(meQuery.data.country);
+  const [country, setCountry] = useState<string>(accountQuery.data.country);
 
   return (
     <div className="flex flex-row gap-2.5 w-full">
@@ -338,7 +338,7 @@ function RouteComponent() {
             <input
               type="text"
               id={firstNameId}
-              defaultValue={meQuery.data.first_name}
+              defaultValue={accountQuery.data.first_name}
             />
           </div>
           <div className="field-row-stacked">
@@ -346,14 +346,14 @@ function RouteComponent() {
             <input
               type="text"
               id={lastNameId}
-              defaultValue={meQuery.data.last_name}
+              defaultValue={accountQuery.data.last_name}
             />
           </div>
           <div className="field-row-stacked">
             <label htmlFor={countryId}>Country</label>
             <select
               id={countryId}
-              defaultValue={meQuery.data.country}
+              defaultValue={accountQuery.data.country}
               onChange={(e) => setCountry(e.target.value)}
             >
               {Object.entries(countryOptions).map(([code, name]) => (
@@ -367,7 +367,7 @@ function RouteComponent() {
             <>
               <div className="field-row-stacked">
                 <label htmlFor={stateId}>State</label>
-                <select id={stateId} defaultValue={meQuery.data.state}>
+                <select id={stateId} defaultValue={accountQuery.data.state}>
                   {Object.entries(usStateOptions).map(([code, name]) => (
                     <option key={code} value={code}>
                       {name}
@@ -380,7 +380,7 @@ function RouteComponent() {
                 <input
                   type="text"
                   id={cityId}
-                  defaultValue={meQuery.data.city}
+                  defaultValue={accountQuery.data.city}
                 />
               </div>
             </>
