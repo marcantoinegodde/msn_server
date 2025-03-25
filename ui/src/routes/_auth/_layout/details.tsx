@@ -334,7 +334,7 @@ function RouteComponent() {
       <form className="w-full">
         <fieldset>
           <div className="field-row-stacked">
-            <label htmlFor={firstNameId}>First Name</label>
+            <label htmlFor={firstNameId}>First Name:</label>
             <input
               type="text"
               id={firstNameId}
@@ -342,7 +342,7 @@ function RouteComponent() {
             />
           </div>
           <div className="field-row-stacked">
-            <label htmlFor={lastNameId}>Last Name</label>
+            <label htmlFor={lastNameId}>Last Name:</label>
             <input
               type="text"
               id={lastNameId}
@@ -350,7 +350,7 @@ function RouteComponent() {
             />
           </div>
           <div className="field-row-stacked">
-            <label htmlFor={countryId}>Country</label>
+            <label htmlFor={countryId}>Country/Region:</label>
             <select
               id={countryId}
               defaultValue={accountQuery.data.country}
@@ -366,7 +366,7 @@ function RouteComponent() {
           {country === "US" && (
             <>
               <div className="field-row-stacked">
-                <label htmlFor={stateId}>State</label>
+                <label htmlFor={stateId}>State:</label>
                 <select id={stateId} defaultValue={accountQuery.data.state}>
                   {Object.entries(usStateOptions).map(([code, name]) => (
                     <option key={code} value={code}>
@@ -376,7 +376,7 @@ function RouteComponent() {
                 </select>
               </div>
               <div className="field-row-stacked">
-                <label htmlFor={cityId}>City</label>
+                <label htmlFor={cityId}>City:</label>
                 <input
                   type="text"
                   id={cityId}
