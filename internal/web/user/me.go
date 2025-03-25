@@ -18,6 +18,15 @@ type UserResponse struct {
 	City      string `json:"city"`
 }
 
+// Me godoc
+//
+//	@Summary		Me route
+//	@Description	Get the user information
+//	@Tags			user
+//	@Produce		json
+//	@Success		200	{object}	UserResponse
+//	@Failure		500	{string}	string	"internal server error"
+//	@Router			/user/me [get]
 func (ac *UserController) Me(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*auth.JwtCustomClaims)

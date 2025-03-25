@@ -6,6 +6,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// Logout godoc
+//
+//	@Summary		Logout route
+//	@Description	Logout from the application
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		plain
+//	@Success		200	{string}	string	"logout success"
+//	@Failure		500	{string}	string	"internal server error"
+//	@Router			/auth/logout [post]
 func (ac *AuthController) Logout(c echo.Context) error {
 	cookie := &http.Cookie{
 		Name:     "token",

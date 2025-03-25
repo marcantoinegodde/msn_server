@@ -7,6 +7,48 @@ definitions:
       password:
         type: string
     type: object
+  auth.User:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      email:
+        type: string
+      first_name:
+        minLength: 2
+        type: string
+      last_name:
+        minLength: 2
+        type: string
+      password:
+        maxLength: 16
+        minLength: 8
+        type: string
+      state:
+        type: string
+    required:
+    - country
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  user.UserResponse:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      state:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is the API for the MSN server web application.
@@ -50,4 +92,91 @@ paths:
       summary: Login route
       tags:
       - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout from the application
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: logout success
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Logout route
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: user information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.User'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: user created
+          schema:
+            type: string
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "409":
+          description: email already exists
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Register route
+      tags:
+      - auth
+  /healthz:
+    get:
+      description: Get the health status of the application
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Healthz route
+      tags:
+      - misc
+  /user/me:
+    get:
+      description: Get the user information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Me route
+      tags:
+      - user
 swagger: "2.0"

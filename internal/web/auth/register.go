@@ -22,6 +22,19 @@ type User struct {
 	City      string `json:"city" validate:"required_if=Country US,excluded_unless=Country US"`
 }
 
+// Register godoc
+//
+//	@Summary		Register route
+//	@Description	Register a new user
+//	@Tags			auth
+//	@Accept			json
+//	@Param			user body User true "user information"
+//	@Produce		plain
+//	@Success		200	{string}	string	"user created"
+//	@Failure		400	{string}	string	"bad request"
+//	@Failure		409	{string}	string	"email already exists"
+//	@Failure		500	{string}	string	"internal server error"
+//	@Router			/auth/register [post]
 func (ac *AuthController) Register(c echo.Context) error {
 	var u User
 	if err := c.Bind(&u); err != nil {
