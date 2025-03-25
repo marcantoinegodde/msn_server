@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
+import userDetails from "@/icons/user_details.png";
 import { queryKeys } from "@/repositories/queryKeys";
 import { getMe } from "@/repositories/user/repositories";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -326,8 +327,11 @@ function RouteComponent() {
   const [country, setCountry] = useState<string>(meQuery.data.country);
 
   return (
-    <div>
-      <form>
+    <div className="flex flex-row gap-2.5 w-full">
+      <div>
+        <img src={userDetails} />
+      </div>
+      <form className="w-full">
         <fieldset>
           <div className="field-row-stacked">
             <label htmlFor={firstNameId}>First Name</label>
