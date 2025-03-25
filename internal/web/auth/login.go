@@ -54,7 +54,7 @@ func (ac *AuthController) Login(c echo.Context) error {
 	}
 
 	var secure bool
-	if ac.c.Env != "production" {
+	if ac.c.Env == "development" {
 		secure = false
 	} else {
 		secure = true

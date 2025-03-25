@@ -61,6 +61,7 @@ func (ws *WebServer) Start() {
 	authGroup := apiGroup.Group("/auth")
 	authGroup.POST("/register", ac.Register)
 	authGroup.POST("/login", ac.Login)
+	authGroup.POST("/logout", ac.Logout)
 
 	restrictedGroup := apiGroup.Group("")
 	restrictedGroup.Use(echojwt.WithConfig(echojwt.Config{
