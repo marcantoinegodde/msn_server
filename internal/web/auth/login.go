@@ -20,6 +20,19 @@ type LoginCredentials struct {
 	Password string `json:"password"`
 }
 
+// Login godoc
+//
+//	@Summary		Login route
+//	@Description	Login to the application
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		plain
+//	@Param			credentials	body		LoginCredentials	true	"login credentials"
+//	@Success		200			{string}	string				"login success"
+//	@Failure		400			{string}	string				"bad request"
+//	@Failure		401			{string}	string				"unauthorized"
+//	@Failure		500			{string}	string				"internal server error"
+//	@Router			/auth/login [post]
 func (ac *AuthController) Login(c echo.Context) error {
 	var lc LoginCredentials
 	if err := c.Bind(&lc); err != nil {

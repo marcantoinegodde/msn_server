@@ -1,0 +1,81 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the API for the MSN server web application.",
+        "title": "MSN Server API",
+        "contact": {},
+        "license": {
+            "name": "CC0 1.0 Universal",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Login to the application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login route",
+                "parameters": [
+                    {
+                        "description": "login credentials",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.LoginCredentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "login success",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "auth.LoginCredentials": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

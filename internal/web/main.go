@@ -12,7 +12,10 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"gorm.io/gorm"
+
+	_ "msnserver/internal/web/docs"
 )
 
 //go:embed all:dist
@@ -30,6 +33,14 @@ func NewWebServer(c *config.MSNServerConfiguration, db *gorm.DB) *WebServer {
 	}
 }
 
+//	@title			MSN Server API
+//	@version		1.0
+//	@description	This is the API for the MSN server web application.
+
+//	@license.name	CC0 1.0 Universal
+//	@license.url	https://creativecommons.org/publicdomain/zero/1.0/
+
+// @BasePath	/api
 func (ws *WebServer) Start() {
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -56,6 +67,7 @@ func (ws *WebServer) Start() {
 	uc := user.NewUserController(ws.db)
 
 	apiGroup := e.Group("/api")
+	apiGroup.GET("/swagger/*", echoSwagger.WrapHandler)
 	apiGroup.GET("/healthz", Healthz)
 
 	authGroup := apiGroup.Group("/auth")

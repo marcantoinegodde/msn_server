@@ -1,0 +1,53 @@
+basePath: /api
+definitions:
+  auth.LoginCredentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is the API for the MSN server web application.
+  license:
+    name: CC0 1.0 Universal
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+  title: MSN Server API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login to the application
+      parameters:
+      - description: login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginCredentials'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: login success
+          schema:
+            type: string
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Login route
+      tags:
+      - auth
+swagger: "2.0"
