@@ -1,20 +1,24 @@
+import { useEffect } from "react";
 import {
   createFileRoute,
   Link,
   linkOptions,
   Outlet,
   useLocation,
+  useRouter,
 } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
 import users from "@/icons/users.png";
 import padlock from "@/icons/padlock.png";
+import { useAuth } from "@/hooks/useAuth";
 import { queryKeys } from "@/repositories/queryKeys";
 import { getMe } from "@/repositories/user/repositories";
+import { postLogout } from "@/repositories/auth/repositories";
 
 export const Route = createFileRoute("/_auth/_layout")({
-  loader: (opts) => {
-    opts.context.queryClient.ensureQueryData({
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData({
       queryKey: queryKeys.me,
       queryFn: getMe,
     });
@@ -38,11 +42,23 @@ const options = linkOptions([
 ]);
 
 function RouteComponent() {
+  const router = useRouter();
   const location = useLocation();
-  const { data } = useSuspenseQuery({
-    queryKey: queryKeys.me,
-    queryFn: getMe,
+  const auth = useAuth();
+
+  const logoutMutation = useMutation({
+    mutationKey: queryKeys.logout,
+    mutationFn: postLogout,
+    onSuccess: () => {
+      auth.logout();
+    },
   });
+
+  useEffect(() => {
+    if (!auth.isAuthenticated) {
+      router.invalidate();
+    }
+  }, [auth.isAuthenticated, router]);
 
   return (
     <div className="window w-1/2">
@@ -57,10 +73,13 @@ function RouteComponent() {
           <fieldset>
             <div className="flex items-center gap-2.5">
               <img height={32} width={32} src={users} />
-              <span>{data.email}</span>
+              <span>{auth.user?.email}</span>
             </div>
           </fieldset>
-          <button className="cursor-pointer">
+          <button
+            className="cursor-pointer"
+            onClick={() => logoutMutation.mutate()}
+          >
             <div className="flex items-center gap-2.5 py-2.5">
               <img height={32} width={32} src={padlock} />
               <span>Logout</span>

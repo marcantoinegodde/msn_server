@@ -4,3 +4,5 @@ export type PostLoginParams = {
 };
 
 export type PostLoginResponse = null;
+
+export type PostLogoutResponse = null;

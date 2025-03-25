@@ -29,14 +29,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    setUser(undefined);
+    meQuery.refetch();
   };
 
   useEffect(() => {
     if (meQuery.isSuccess) {
       setUser(meQuery.data);
     }
-  }, [meQuery.isSuccess, meQuery.data]);
+    if (meQuery.isError) {
+      setUser(undefined);
+    }
+  }, [meQuery.isSuccess, meQuery.isError, meQuery.data]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>

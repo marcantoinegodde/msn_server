@@ -7,8 +7,8 @@ import { queryKeys } from "@/repositories/queryKeys";
 import { getMe } from "@/repositories/user/repositories";
 
 export const Route = createFileRoute("/_auth/_layout/details")({
-  loader: (opts) =>
-    opts.context.queryClient.ensureQueryData({
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData({
       queryKey: queryKeys.me,
       queryFn: getMe,
     }),
