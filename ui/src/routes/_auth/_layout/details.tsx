@@ -1,10 +1,10 @@
 import { useId, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 import userDetails from "@/icons/user_details.png";
 import { queryKeys } from "@/repositories/queryKeys";
 import { getMe } from "@/repositories/user/repositories";
-import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_auth/_layout/details")({
   loader: (opts) =>
@@ -387,7 +387,9 @@ function RouteComponent() {
           )}
         </fieldset>
         <div className="flex justify-end mt-2.5">
-          <button type="submit">OK</button>
+          <button type="submit" className="cursor-pointer">
+            OK
+          </button>
         </div>
       </form>
     </div>

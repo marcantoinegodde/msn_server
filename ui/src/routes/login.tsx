@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
@@ -6,7 +7,6 @@ import keys from "@/icons/keys.png";
 import { queryKeys } from "@/repositories/queryKeys";
 import { postLogin } from "@/repositories/auth/repositories";
 import { PostLoginParams } from "@/repositories/auth/types";
-import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 type LoginSearch = {
@@ -104,7 +104,7 @@ function RouteComponent() {
                   </div>
                 )}
             </div>
-            <button type="submit">
+            <button type="submit" className="cursor-pointer">
               {loginMutation.isPending ? "Loading..." : "OK"}
             </button>
           </div>
