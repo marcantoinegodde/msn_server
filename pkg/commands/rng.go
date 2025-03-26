@@ -20,8 +20,13 @@ type RNGMessage struct {
 }
 
 func HandleRNG(rdb *redis.Client, m *sync.Mutex, clients map[string]*clients.Client, rngMessage RNGMessage) error {
+	random, err := utils.GenerateRandomString(25)
+	if err != nil {
+		return err
+	}
+
 	cki := cki{
-		Cki:       utils.GenerateRandomString(25),
+		Cki:       random,
 		SessionID: rngMessage.SessionID,
 	}
 

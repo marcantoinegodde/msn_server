@@ -24,7 +24,7 @@ type User struct {
 
 // Register godoc
 //
-//	@Summary		Register route
+//	@Summary		Register
 //	@Description	Register a new user
 //	@Tags			auth
 //	@Accept			json
@@ -45,7 +45,11 @@ func (ac *AuthController) Register(c echo.Context) error {
 		return err
 	}
 
-	salt := utils.GenerateRandomString(20)
+	salt, err := utils.GenerateRandomString(20)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "internal server error")
+	}
+
 	hashedPassword := hashPassword(salt, u.Password)
 
 	firstName := formatName(u.FirstName)
@@ -64,7 +68,7 @@ func (ac *AuthController) Register(c echo.Context) error {
 		DisplayName: displayName,
 	}
 
-	err := ac.db.Create(&user).Error
+	err = ac.db.Create(&user).Error
 	if errors.Is(err, gorm.ErrDuplicatedKey) {
 		return c.String(http.StatusConflict, "email already exists")
 	} else if err != nil {

@@ -61,8 +61,13 @@ func HandleXFR(cf config.NotificationServer, db *gorm.DB, rdb *redis.Client, c *
 		return nil
 	}
 
+	random, err := utils.GenerateRandomString(25)
+	if err != nil {
+		return err
+	}
+
 	cki := cki{
-		Cki:       utils.GenerateRandomString(25),
+		Cki:       random,
 		SessionID: 0,
 	}
 

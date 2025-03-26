@@ -1,20 +1,23 @@
 package utils
 
 import (
-	"time"
-
-	"golang.org/x/exp/rand"
+	"crypto/rand"
+	"math/big"
 )
 
-const letters string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func GenerateRandomString(length int) string {
-	rand.Seed(uint64(time.Now().UnixNano()))
-
+func GenerateRandomString(length uint) (string, error) {
 	result := make([]byte, length)
+	max := big.NewInt(int64(len(letters)))
+
 	for i := range result {
-		result[i] = letters[rand.Intn(len(letters))]
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", err
+		}
+		result[i] = letters[n.Int64()]
 	}
 
-	return string(result)
+	return string(result), nil
 }
