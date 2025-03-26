@@ -8,7 +8,7 @@ import (
 
 // Logout godoc
 //
-//	@Summary		Logout route
+//	@Summary		Logout
 //	@Description	Logout from the application
 //	@Tags			auth
 //	@Accept			json

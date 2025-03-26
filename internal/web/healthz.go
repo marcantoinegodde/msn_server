@@ -8,7 +8,7 @@ import (
 
 // Healthz godoc
 //
-//	@Summary		Healthz route
+//	@Summary		Healthz
 //	@Description	Get the health status of the application
 //	@Tags			misc
 //	@Produce		plain

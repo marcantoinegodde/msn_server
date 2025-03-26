@@ -22,7 +22,7 @@ type LoginCredentials struct {
 
 // Login godoc
 //
-//	@Summary		Login route
+//	@Summary		Login
 //	@Description	Login to the application
 //	@Tags			auth
 //	@Accept			json
