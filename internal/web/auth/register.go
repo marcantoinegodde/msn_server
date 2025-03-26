@@ -52,9 +52,10 @@ func (ac *AuthController) Register(c echo.Context) error {
 
 	hashedPassword := hashPassword(salt, u.Password)
 
-	firstName := formatName(u.FirstName)
-	lastName := formatName(u.LastName)
+	firstName := utils.FormatString(u.FirstName)
+	lastName := utils.FormatString(u.LastName)
 	displayName := url.PathEscape(fmt.Sprintf("%s %s", firstName, lastName))
+	city := utils.FormatString(u.City)
 
 	user := database.User{
 		Email:       u.Email,
@@ -64,7 +65,7 @@ func (ac *AuthController) Register(c echo.Context) error {
 		LastName:    lastName,
 		Country:     u.Country,
 		State:       u.State,
-		City:        u.City,
+		City:        city,
 		DisplayName: displayName,
 	}
 
