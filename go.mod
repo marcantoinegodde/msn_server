@@ -1,6 +1,6 @@
 module msnserver
 
-go 1.24.1
+go 1.24.0
 
 require (
 	github.com/go-playground/validator/v10 v10.25.0
