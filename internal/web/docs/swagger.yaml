@@ -34,6 +34,21 @@ definitions:
     - last_name
     - password
     type: object
+  user.UserBody:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      first_name:
+        minLength: 2
+        type: string
+      last_name:
+        minLength: 2
+        type: string
+      state:
+        type: string
+    type: object
   user.UserResponse:
     properties:
       city:
@@ -89,7 +104,7 @@ paths:
           description: internal server error
           schema:
             type: string
-      summary: Login route
+      summary: Login
       tags:
       - auth
   /auth/logout:
@@ -108,7 +123,7 @@ paths:
           description: internal server error
           schema:
             type: string
-      summary: Logout route
+      summary: Logout
       tags:
       - auth
   /auth/register:
@@ -142,7 +157,7 @@ paths:
           description: internal server error
           schema:
             type: string
-      summary: Register route
+      summary: Register
       tags:
       - auth
   /healthz:
@@ -159,12 +174,12 @@ paths:
           description: internal server error
           schema:
             type: string
-      summary: Healthz route
+      summary: Healthz
       tags:
       - misc
   /user/account:
     get:
-      description: Get the user information
+      description: Get user account information
       produces:
       - application/json
       responses:
@@ -176,7 +191,36 @@ paths:
           description: internal server error
           schema:
             type: string
-      summary: Account route
+      summary: Get account
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      description: Update user account information
+      parameters:
+      - description: User information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/user.UserBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Update account
       tags:
       - user
 swagger: "2.0"

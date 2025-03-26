@@ -31,7 +31,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Login route",
+                "summary": "Login",
                 "parameters": [
                     {
                         "description": "login credentials",
@@ -83,7 +83,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Logout route",
+                "summary": "Logout",
                 "responses": {
                     "200": {
                         "description": "logout success",
@@ -112,7 +112,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Register route",
+                "summary": "Register",
                 "parameters": [
                     {
                         "description": "user information",
@@ -161,7 +161,7 @@ const docTemplate = `{
                 "tags": [
                     "misc"
                 ],
-                "summary": "Healthz route",
+                "summary": "Healthz",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -180,19 +180,63 @@ const docTemplate = `{
         },
         "/user/account": {
             "get": {
-                "description": "Get the user information",
+                "description": "Get user account information",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "user"
                 ],
-                "summary": "Account route",
+                "summary": "Get account",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/user.UserResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update user account information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Update account",
+                "parameters": [
+                    {
+                        "description": "User information",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.UserBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/user.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -248,6 +292,28 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 16,
                     "minLength": 8
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.UserBody": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "last_name": {
+                    "type": "string",
+                    "minLength": 2
                 },
                 "state": {
                     "type": "string"
