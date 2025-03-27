@@ -12,7 +12,6 @@ import { useMutation } from "@tanstack/react-query";
 import users from "@/icons/users.png";
 import padlock from "@/icons/padlock.png";
 import { useAuth } from "@/hooks/useAuth";
-import { queryKeys } from "@/repositories/queryKeys";
 import { postLogout } from "@/repositories/auth/repositories";
 
 export const Route = createFileRoute("/_auth/_layout")({
@@ -40,7 +39,6 @@ function RouteComponent() {
   const auth = useAuth();
 
   const logoutMutation = useMutation({
-    mutationKey: queryKeys.logout,
     mutationFn: postLogout,
     onSuccess: () => {
       auth.logout();

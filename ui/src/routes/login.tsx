@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
 import keys from "@/icons/keys.png";
-import { queryKeys } from "@/repositories/queryKeys";
 import { postLogin } from "@/repositories/auth/repositories";
 import { PostLoginParams } from "@/repositories/auth/types";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,7 +31,6 @@ function RouteComponent() {
   const router = useRouter();
 
   const loginMutation = useMutation({
-    mutationKey: queryKeys.login,
     mutationFn: ({ email, password }: PostLoginParams) =>
       postLogin({ email, password }),
     onSuccess: () => {
