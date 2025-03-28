@@ -15,7 +15,7 @@ type UserBody struct {
 	LastName  string `json:"last_name" validate:"omitempty,min=2,name"`
 	Country   string `json:"country" validate:"omitempty,country"`
 	State     string `json:"state" validate:"required_if=Country US,excluded_unless=Country US,omitempty,us_state"`
-	City      string `json:"city" validate:"required_if=Country US,excluded_unless=Country US"`
+	City      string `json:"city" validate:"required_if=Country US,excluded_unless=Country US,omitempty,min=2,name"`
 }
 
 type UserResponse struct {

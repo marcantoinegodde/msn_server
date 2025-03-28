@@ -19,7 +19,7 @@ type User struct {
 	LastName  string `json:"last_name" validate:"required,min=2,name"`
 	Country   string `json:"country" validate:"required,country"`
 	State     string `json:"state" validate:"required_if=Country US,excluded_unless=Country US,omitempty,us_state"`
-	City      string `json:"city" validate:"required_if=Country US,excluded_unless=Country US"`
+	City      string `json:"city" validate:"required_if=Country US,excluded_unless=Country US,omitempty,min=2,name"`
 }
 
 // Register godoc
