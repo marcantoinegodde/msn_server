@@ -7,6 +7,7 @@ import (
 	"msnserver/pkg/utils"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -45,11 +46,11 @@ func (ac *AuthController) Register(c echo.Context) error {
 		return err
 	}
 
+	email := strings.ToLower(u.Email)
 	salt, err := utils.GenerateRandomString(20)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
-
 	hashedPassword := hashPassword(salt, u.Password)
 
 	firstName := utils.FormatString(u.FirstName)
@@ -58,7 +59,7 @@ func (ac *AuthController) Register(c echo.Context) error {
 	city := utils.FormatString(u.City)
 
 	user := database.User{
-		Email:       u.Email,
+		Email:       email,
 		Salt:        salt,
 		Password:    hashedPassword,
 		FirstName:   firstName,

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"msnserver/pkg/database"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -40,7 +41,7 @@ func (ac *AuthController) Login(c echo.Context) error {
 	}
 
 	var user database.User
-	if err := ac.db.Where("email = ?", lc.Email).First(&user).Error; err != nil {
+	if err := ac.db.Where("email = ?", strings.ToLower(lc.Email)).First(&user).Error; err != nil {
 		return c.String(http.StatusUnauthorized, "unauthorized")
 	}
 
