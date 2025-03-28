@@ -101,7 +101,7 @@ function RouteComponent() {
         <img src={userDetails} />
       </div>
       <form
-        className="w-full"
+        className="w-full overflow-auto"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
