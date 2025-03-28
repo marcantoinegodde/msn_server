@@ -95,7 +95,7 @@ function RouteComponent() {
             <div className="truncate">
               {loginMutation.isError &&
                 axios.isAxiosError(loginMutation.error) && (
-                  <div className="text-red-500">
+                  <div className="text-red-700">
                     {loginMutation.error.response?.status === 401
                       ? "Invalid email or password."
                       : "Something went wrong."}
