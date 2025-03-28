@@ -36,13 +36,13 @@ type UserResponse struct {
 //	@Success		200	{object}	UserResponse
 //	@Failure		500	{string}	string	"internal server error"
 //	@Router			/user/account [get]
-func (ac *UserController) GetAccount(c echo.Context) error {
+func (uc *UserController) GetAccount(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*auth.JwtCustomClaims)
 	email := claims.Subject
 
 	var user database.User
-	if err := ac.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := uc.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
 
@@ -70,7 +70,7 @@ func (ac *UserController) GetAccount(c echo.Context) error {
 //	@Failure		400		{string}	string	"bad request"
 //	@Failure		500		{string}	string	"internal server error"
 //	@Router			/user/account [patch]
-func (ac *UserController) UpdateAccount(c echo.Context) error {
+func (uc *UserController) UpdateAccount(c echo.Context) error {
 	// Bind request body to UserBody struct
 	var u UserBody
 	if err := c.Bind(&u); err != nil {
@@ -88,7 +88,7 @@ func (ac *UserController) UpdateAccount(c echo.Context) error {
 
 	// Retrieve user from database
 	var user database.User
-	if err := ac.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := uc.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
 
@@ -105,19 +105,19 @@ func (ac *UserController) UpdateAccount(c echo.Context) error {
 		City:      city,
 	}
 
-	if err := ac.db.Model(&user).Updates(updates).Error; err != nil {
+	if err := uc.db.Model(&user).Updates(updates).Error; err != nil {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
 
 	// If country is not US, update state and city to null
 	if updates.Country != "" && updates.Country != "US" {
-		if err := ac.db.Model(&user).Select("state", "city").Updates(updates).Error; err != nil {
+		if err := uc.db.Model(&user).Select("state", "city").Updates(updates).Error; err != nil {
 			return c.String(http.StatusInternalServerError, "internal server error")
 		}
 	}
 
 	// Refresh user data to get updated values
-	if err := ac.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := uc.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
 

@@ -87,6 +87,7 @@ func (ws *WebServer) Start() {
 	userGroup := restrictedGroup.Group("/user")
 	userGroup.GET("/account", uc.GetAccount)
 	userGroup.PATCH("/account", uc.UpdateAccount)
+	userGroup.PUT("/account/password", uc.UpdatePassword)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
