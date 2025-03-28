@@ -13,6 +13,45 @@ import { UpdateAccountParams } from "@/repositories/user/types";
 import { FieldInfo } from "@/components/FieldInfo";
 import { CountryOptions } from "@/components/CountryOptions";
 import { StateOptions } from "@/components/StateOptions";
+import { z } from "zod";
+
+const schema = z
+  .object({
+    first_name: z
+      .string()
+      .min(2, "First name must be at least 2 characters")
+      .regex(/^[a-zA-Z' -]*$/, "First name is invalid"),
+    last_name: z
+      .string()
+      .min(2, "Last name must be at least 2 characters")
+      .regex(/^[a-zA-Z' -]*$/, "Last name is invalid"),
+    country: z.string(),
+    state: z.string(),
+    city: z.string(),
+  })
+  .superRefine((val, ctx) => {
+    const regex = /^[a-zA-Z' -]*$/;
+    if (val.country === "US") {
+      if (val.city.length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.too_small,
+          minimum: 2,
+          type: "string",
+          inclusive: true,
+          message: "City must be at least 2 characters",
+          path: ["city"],
+        });
+      }
+      if (!regex.test(val.city)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_string,
+          validation: "regex",
+          message: "City is invalid",
+          path: ["city"],
+        });
+      }
+    }
+  });
 
 export const Route = createFileRoute("/_auth/_layout/details")({
   loader: ({ context }) =>
@@ -46,6 +85,10 @@ function RouteComponent() {
       state: accountQuery.data.state,
       city: accountQuery.data.city,
     },
+    validators: {
+      onChange: schema,
+    },
+
     onSubmit: async ({ formApi, value }) => {
       await accountMutation.mutateAsync(value);
       formApi.reset();
@@ -69,14 +112,6 @@ function RouteComponent() {
           <div className="field-row-stacked">
             <form.Field
               name="first_name"
-              validators={{
-                onChange: ({ value }) =>
-                  !value
-                    ? "A first name is required"
-                    : value.length < 2
-                    ? "First name must be at least 2 characters"
-                    : undefined,
-              }}
               children={(field) => {
                 return (
                   <>
@@ -98,14 +133,6 @@ function RouteComponent() {
           <div className="field-row-stacked">
             <form.Field
               name="last_name"
-              validators={{
-                onChange: ({ value }) =>
-                  !value
-                    ? "A last name is required"
-                    : value.length < 2
-                    ? "Last name must be at least 2 characters"
-                    : undefined,
-              }}
               children={(field) => {
                 return (
                   <>
@@ -184,19 +211,6 @@ function RouteComponent() {
                   <div className="field-row-stacked">
                     <form.Field
                       name="city"
-                      validators={{
-                        onBlurListenTo: ["country"],
-                        onChange: ({ value, fieldApi }) => {
-                          if (fieldApi.form.getFieldValue("country") !== "US") {
-                            return undefined;
-                          }
-                          return !value
-                            ? "A city is required"
-                            : value.length < 2
-                            ? "City must be at least 2 characters"
-                            : undefined;
-                        },
-                      }}
                       children={(field) => {
                         return (
                           <>
