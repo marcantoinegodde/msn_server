@@ -5,6 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { z } from "zod";
 
 import userDetails from "@/icons/user_details.png";
 import { queryKeys } from "@/repositories/queryKeys";
@@ -13,7 +14,6 @@ import { UpdateAccountParams } from "@/repositories/user/types";
 import { FieldInfo } from "@/components/FieldInfo";
 import { CountryOptions } from "@/components/CountryOptions";
 import { StateOptions } from "@/components/StateOptions";
-import { z } from "zod";
 
 const schema = z
   .object({
@@ -156,7 +156,9 @@ function RouteComponent() {
               name="country"
               listeners={{
                 onChange: ({ value }) => {
-                  if (value !== "US") {
+                  if (value === "US") {
+                    form.setFieldValue("state", "AL");
+                  } else {
                     form.setFieldValue("state", "");
                     form.setFieldValue("city", "");
                   }
@@ -252,7 +254,10 @@ function RouteComponent() {
                 <>
                   <button
                     type="reset"
-                    onClick={() => form.reset()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      form.reset();
+                    }}
                     className="cursor-pointer"
                   >
                     Reset
