@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"msnserver/pkg/database"
+	"msnserver/pkg/utils"
 	"net/http"
 	"strings"
 	"time"
@@ -45,7 +46,7 @@ func (ac *AuthController) Login(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, "unauthorized")
 	}
 
-	hashedPassword := hashPassword(user.Salt, lc.Password)
+	hashedPassword := utils.HashPasswordMD5(user.Salt, lc.Password)
 	if hashedPassword != user.Password {
 		return c.String(http.StatusUnauthorized, "unauthorized")
 	}

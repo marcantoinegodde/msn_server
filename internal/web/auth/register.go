@@ -51,7 +51,7 @@ func (ac *AuthController) Register(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
-	hashedPassword := hashPassword(salt, u.Password)
+	hashedPassword := utils.HashPasswordMD5(salt, u.Password)
 
 	firstName := utils.FormatString(u.FirstName)
 	lastName := utils.FormatString(u.LastName)
