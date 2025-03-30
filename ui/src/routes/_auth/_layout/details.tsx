@@ -10,7 +10,7 @@ import { z } from "zod";
 import userDetails from "@/icons/user_details.png";
 import { queryKeys } from "@/repositories/queryKeys";
 import { getAccount, updateAccount } from "@/repositories/user/repositories";
-import { UpdateAccountParams } from "@/repositories/user/types";
+import { UpdateAccountBody } from "@/repositories/user/types";
 import { FieldInfo } from "@/components/FieldInfo";
 import { CountryOptions } from "@/components/CountryOptions";
 import { StateOptions } from "@/components/StateOptions";
@@ -71,7 +71,7 @@ function RouteComponent() {
   });
 
   const accountMutation = useMutation({
-    mutationFn: (data: UpdateAccountParams) => updateAccount(data),
+    mutationFn: (data: UpdateAccountBody) => updateAccount(data),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.account, data);
     },
@@ -88,7 +88,6 @@ function RouteComponent() {
     validators: {
       onChange: schema,
     },
-
     onSubmit: async ({ formApi, value }) => {
       await accountMutation.mutateAsync(value);
       formApi.reset();

@@ -5,7 +5,7 @@ import axios from "axios";
 
 import keys from "@/icons/keys.png";
 import { postLogin } from "@/repositories/auth/repositories";
-import { PostLoginParams } from "@/repositories/auth/types";
+import { PostLoginBody } from "@/repositories/auth/types";
 import { useAuth } from "@/hooks/useAuth";
 
 type LoginSearch = {
@@ -31,7 +31,7 @@ function RouteComponent() {
   const router = useRouter();
 
   const loginMutation = useMutation({
-    mutationFn: ({ email, password }: PostLoginParams) =>
+    mutationFn: ({ email, password }: PostLoginBody) =>
       postLogin({ email, password }),
     onSuccess: () => {
       auth.login();
