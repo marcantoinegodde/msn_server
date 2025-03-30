@@ -28,6 +28,10 @@ const options = linkOptions([
     label: "User Details",
   },
   {
+    to: "/password",
+    label: "Password",
+  },
+  {
     to: "/status",
     label: "Server Status",
   },
