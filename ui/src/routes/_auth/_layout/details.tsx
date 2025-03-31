@@ -117,6 +117,7 @@ function RouteComponent() {
                     <label htmlFor={field.name}>First Name:</label>
                     <input
                       type="text"
+                      autoComplete="given-name"
                       id={field.name}
                       name={field.name}
                       value={field.state.value}
@@ -138,6 +139,7 @@ function RouteComponent() {
                     <label htmlFor={field.name}>Last Name:</label>
                     <input
                       type="text"
+                      autoComplete="family-name"
                       id={field.name}
                       name={field.name}
                       value={field.state.value}
@@ -218,6 +220,7 @@ function RouteComponent() {
                             <label htmlFor={field.name}>City:</label>
                             <input
                               type="text"
+                              autoComplete="address-level2"
                               id={field.name}
                               name={field.name}
                               value={field.state.value}

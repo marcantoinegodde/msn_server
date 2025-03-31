@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
@@ -27,6 +27,8 @@ export const Route = createFileRoute("/login")({
 });
 
 function RouteComponent() {
+  const emailId = useId();
+  const passwordId = useId();
   const auth = useAuth();
   const router = useRouter();
 
@@ -71,18 +73,24 @@ function RouteComponent() {
               <p>Enter your e-mail address and password:</p>
               <fieldset disabled={loginMutation.isPending}>
                 <div className="field-row">
-                  <label className="text-nowrap">Logon Name:</label>
+                  <label htmlFor={emailId} className="text-nowrap">
+                    Logon Name:
+                  </label>
                   <input
                     type="email"
+                    autoComplete="username"
+                    id={emailId}
                     name="email"
                     required
                     className="w-full"
                   />
                 </div>
                 <div className="field-row">
-                  <label>Password:</label>
+                  <label htmlFor={passwordId}>Password:</label>
                   <input
                     type="password"
+                    autoComplete="current-password"
+                    id={passwordId}
                     name="password"
                     required
                     className="w-full"

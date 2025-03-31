@@ -82,6 +82,7 @@ function RouteComponent() {
                     <label htmlFor={field.name}>Old Password:</label>
                     <input
                       type="password"
+                      autoComplete="current-password"
                       id={field.name}
                       name={field.name}
                       value={field.state.value}
@@ -103,6 +104,7 @@ function RouteComponent() {
                     <label htmlFor={field.name}>New Password:</label>
                     <input
                       type="password"
+                      autoComplete="new-password"
                       id={field.name}
                       name={field.name}
                       value={field.state.value}
@@ -124,6 +126,7 @@ function RouteComponent() {
                     <label htmlFor={field.name}>Confirm New Password:</label>
                     <input
                       type="password"
+                      autoComplete="new-password"
                       id={field.name}
                       name={field.name}
                       value={field.state.value}
