@@ -68,13 +68,7 @@ func (ac *AuthController) Login(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
 
-	var secure bool
-	if ac.c.Env == "development" {
-		secure = false
-	} else {
-		secure = true
-	}
-
+	secure := ac.c.Env != "development"
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    t,
