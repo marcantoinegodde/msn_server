@@ -32,6 +32,10 @@ const options = linkOptions([
     label: "Password",
   },
   {
+    to: "/passkeys",
+    label: "Passkeys",
+  },
+  {
     to: "/status",
     label: "Server Status",
   },

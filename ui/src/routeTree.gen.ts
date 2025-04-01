@@ -17,6 +17,7 @@ import { Route as AuthLayoutRouteImport } from './routes/_auth/_layout/route'
 import { Route as AuthLayoutIndexImport } from './routes/_auth/_layout/index'
 import { Route as AuthLayoutStatusImport } from './routes/_auth/_layout/status'
 import { Route as AuthLayoutPasswordImport } from './routes/_auth/_layout/password'
+import { Route as AuthLayoutPasskeysImport } from './routes/_auth/_layout/passkeys'
 import { Route as AuthLayoutDetailsImport } from './routes/_auth/_layout/details'
 
 // Create/Update Routes
@@ -52,6 +53,12 @@ const AuthLayoutStatusRoute = AuthLayoutStatusImport.update({
 const AuthLayoutPasswordRoute = AuthLayoutPasswordImport.update({
   id: '/password',
   path: '/password',
+  getParentRoute: () => AuthLayoutRouteRoute,
+} as any)
+
+const AuthLayoutPasskeysRoute = AuthLayoutPasskeysImport.update({
+  id: '/passkeys',
+  path: '/passkeys',
   getParentRoute: () => AuthLayoutRouteRoute,
 } as any)
 
@@ -93,6 +100,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLayoutDetailsImport
       parentRoute: typeof AuthLayoutRouteImport
     }
+    '/_auth/_layout/passkeys': {
+      id: '/_auth/_layout/passkeys'
+      path: '/passkeys'
+      fullPath: '/passkeys'
+      preLoaderRoute: typeof AuthLayoutPasskeysImport
+      parentRoute: typeof AuthLayoutRouteImport
+    }
     '/_auth/_layout/password': {
       id: '/_auth/_layout/password'
       path: '/password'
@@ -121,6 +135,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthLayoutRouteRouteChildren {
   AuthLayoutDetailsRoute: typeof AuthLayoutDetailsRoute
+  AuthLayoutPasskeysRoute: typeof AuthLayoutPasskeysRoute
   AuthLayoutPasswordRoute: typeof AuthLayoutPasswordRoute
   AuthLayoutStatusRoute: typeof AuthLayoutStatusRoute
   AuthLayoutIndexRoute: typeof AuthLayoutIndexRoute
@@ -128,6 +143,7 @@ interface AuthLayoutRouteRouteChildren {
 
 const AuthLayoutRouteRouteChildren: AuthLayoutRouteRouteChildren = {
   AuthLayoutDetailsRoute: AuthLayoutDetailsRoute,
+  AuthLayoutPasskeysRoute: AuthLayoutPasskeysRoute,
   AuthLayoutPasswordRoute: AuthLayoutPasswordRoute,
   AuthLayoutStatusRoute: AuthLayoutStatusRoute,
   AuthLayoutIndexRoute: AuthLayoutIndexRoute,
@@ -153,6 +169,7 @@ export interface FileRoutesByFullPath {
   '': typeof AuthLayoutRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/details': typeof AuthLayoutDetailsRoute
+  '/passkeys': typeof AuthLayoutPasskeysRoute
   '/password': typeof AuthLayoutPasswordRoute
   '/status': typeof AuthLayoutStatusRoute
   '/': typeof AuthLayoutIndexRoute
@@ -162,6 +179,7 @@ export interface FileRoutesByTo {
   '': typeof AuthRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/details': typeof AuthLayoutDetailsRoute
+  '/passkeys': typeof AuthLayoutPasskeysRoute
   '/password': typeof AuthLayoutPasswordRoute
   '/status': typeof AuthLayoutStatusRoute
   '/': typeof AuthLayoutIndexRoute
@@ -173,6 +191,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_auth/_layout': typeof AuthLayoutRouteRouteWithChildren
   '/_auth/_layout/details': typeof AuthLayoutDetailsRoute
+  '/_auth/_layout/passkeys': typeof AuthLayoutPasskeysRoute
   '/_auth/_layout/password': typeof AuthLayoutPasswordRoute
   '/_auth/_layout/status': typeof AuthLayoutStatusRoute
   '/_auth/_layout/': typeof AuthLayoutIndexRoute
@@ -180,15 +199,23 @@ export interface FileRoutesById {
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '' | '/login' | '/details' | '/password' | '/status' | '/'
+  fullPaths:
+    | ''
+    | '/login'
+    | '/details'
+    | '/passkeys'
+    | '/password'
+    | '/status'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '' | '/login' | '/details' | '/password' | '/status' | '/'
+  to: '' | '/login' | '/details' | '/passkeys' | '/password' | '/status' | '/'
   id:
     | '__root__'
     | '/_auth'
     | '/login'
     | '/_auth/_layout'
     | '/_auth/_layout/details'
+    | '/_auth/_layout/passkeys'
     | '/_auth/_layout/password'
     | '/_auth/_layout/status'
     | '/_auth/_layout/'
@@ -233,6 +260,7 @@ export const routeTree = rootRoute
       "parent": "/_auth",
       "children": [
         "/_auth/_layout/details",
+        "/_auth/_layout/passkeys",
         "/_auth/_layout/password",
         "/_auth/_layout/status",
         "/_auth/_layout/"
@@ -240,6 +268,10 @@ export const routeTree = rootRoute
     },
     "/_auth/_layout/details": {
       "filePath": "_auth/_layout/details.tsx",
+      "parent": "/_auth/_layout"
+    },
+    "/_auth/_layout/passkeys": {
+      "filePath": "_auth/_layout/passkeys.tsx",
       "parent": "/_auth/_layout"
     },
     "/_auth/_layout/password": {
