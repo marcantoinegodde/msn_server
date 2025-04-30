@@ -46,7 +46,10 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-4">
       {results?.every((r) => r === true) ? "Available" : "Not available"}
-      <button onClick={() => passkeyRegisterBeginMutation.mutate()}>
+      <button
+        className="cursor-pointer"
+        onClick={() => passkeyRegisterBeginMutation.mutate()}
+      >
         Create a passkey
       </button>
     </div>
