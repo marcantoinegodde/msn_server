@@ -5,6 +5,7 @@ import (
 	"msnserver/pkg/database"
 	"net/http"
 
+	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo-contrib/session"
@@ -28,8 +29,16 @@ func (ac *AuthController) RegisterBegin(c echo.Context) error {
 		return err
 	}
 
+	// Updating the AuthenticatorSelection options.
+	authSelect := protocol.AuthenticatorSelection{
+		AuthenticatorAttachment: protocol.AuthenticatorAttachment("platform"),
+		ResidentKey:             protocol.ResidentKeyRequirementRequired,
+		RequireResidentKey:      protocol.ResidentKeyRequired(),
+		UserVerification:        protocol.VerificationPreferred,
+	}
+
 	// Initialize webauthn registration
-	options, session, err := ac.webauthn.BeginRegistration(&user)
+	options, session, err := ac.webauthn.BeginRegistration(&user, webauthn.WithAuthenticatorSelection(authSelect))
 	if err != nil {
 		return err
 	}
