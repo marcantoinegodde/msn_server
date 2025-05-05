@@ -10,14 +10,10 @@ export const Route = createFileRoute("/_auth/_layout/passkeys")({
   loader: async () => {
     if (
       PublicKeyCredential &&
-      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-      PublicKeyCredential.isConditionalMediationAvailable
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable
     ) {
       try {
-        return await Promise.all([
-          PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
-          PublicKeyCredential.isConditionalMediationAvailable(),
-        ]);
+        return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       } catch (e) {
         console.error(e);
       }
@@ -27,7 +23,7 @@ export const Route = createFileRoute("/_auth/_layout/passkeys")({
 });
 
 function RouteComponent() {
-  const results = Route.useLoaderData();
+  const isUVPAA = Route.useLoaderData();
 
   const passkeyRegisterBeginMutation = useMutation({
     mutationFn: postWebauthnRegisterBegin,
@@ -49,9 +45,16 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-4">
-      {results?.every((r) => r === true) ? "Available" : "Not available"}
+      <div>
+        <span>Passkeys Support: </span>
+        <span className="font-bold">
+          {isUVPAA ? "Available" : "Not available"}
+        </span>
+      </div>
+
       <button
-        className="cursor-pointer"
+        className="cursor-pointer disabled:cursor-not-allowed"
+        disabled={!isUVPAA}
         onClick={() => passkeyRegisterBeginMutation.mutate()}
       >
         Create a passkey
