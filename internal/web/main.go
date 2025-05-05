@@ -121,7 +121,7 @@ func (ws *WebServer) Start() {
 	authGroup.POST("/logout", ac.Logout)
 
 	webauthnGroup := authGroup.Group("/webauthn")
-	webauthnGroup.GET("/login/begin", ac.LoginBegin)
+	webauthnGroup.POST("/login/begin", ac.LoginBegin)
 	webauthnGroup.POST("/login/finish", ac.LoginFinish)
 	webauthnRestrictedGroup := webauthnGroup.Group("")
 	webauthnRestrictedGroup.Use(echojwt.WithConfig(jwtMiddlewareConfig))

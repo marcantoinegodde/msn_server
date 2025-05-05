@@ -41,3 +41,21 @@ export const postWebauthnRegisterFinish = async (body: PublicKeyCredential) => {
   );
   return response.data;
 };
+
+export const postWebauthnLoginBegin = async () => {
+  const response = await axios.post<PublicKeyCredentialCreationOptionsJSON>(
+    `${import.meta.env.VITE_API_URL}/auth/webauthn/login/begin`,
+    {},
+    { withCredentials: true }
+  );
+  return response.data;
+};
+
+export const postWebauthnLoginFinish = async (body: PublicKeyCredential) => {
+  const response = await axios.post<PublicKeyCredential>(
+    `${import.meta.env.VITE_API_URL}/auth/webauthn/login/finish`,
+    body,
+    { withCredentials: true }
+  );
+  return response.data;
+};

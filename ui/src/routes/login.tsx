@@ -4,7 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
 import keys from "@/icons/keys.png";
-import { postLogin } from "@/repositories/auth/repositories";
+import {
+  postWebauthnLoginBegin,
+  postLogin,
+  postWebauthnLoginFinish,
+} from "@/repositories/auth/repositories";
 import { PostLoginBody } from "@/repositories/auth/types";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -24,27 +28,77 @@ export const Route = createFileRoute("/login")({
       throw redirect({ to: search.redirect || "/" });
     }
   },
+  loader: async () => {
+    if (
+      PublicKeyCredential &&
+      PublicKeyCredential.isConditionalMediationAvailable
+    ) {
+      try {
+        return await PublicKeyCredential.isConditionalMediationAvailable();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  },
 });
 
 function RouteComponent() {
   const emailId = useId();
   const passwordId = useId();
-  const auth = useAuth();
-  const router = useRouter();
+  const { isAuthenticated, login } = useAuth();
+  const { invalidate } = useRouter();
+
+  const isCMA = Route.useLoaderData();
+
+  const { mutate: passkeyLoginBeginMutate } = useMutation({
+    mutationFn: postWebauthnLoginBegin,
+    onSuccess: async (
+      data,
+      variables: { abortController: AbortController }
+    ) => {
+      const options = PublicKeyCredential.parseRequestOptionsFromJSON(data);
+      const credential = await navigator.credentials.get({
+        publicKey: options,
+        mediation: "conditional",
+        signal: variables.abortController.signal,
+      });
+      if (!(credential instanceof PublicKeyCredential)) {
+        throw new TypeError();
+      }
+      passkeyLoginFinishMutation.mutate(credential);
+    },
+  });
+
+  const passkeyLoginFinishMutation = useMutation({
+    mutationFn: (data: PublicKeyCredential) => postWebauthnLoginFinish(data),
+    onSuccess: () => {
+      login();
+    },
+  });
 
   const loginMutation = useMutation({
     mutationFn: ({ email, password }: PostLoginBody) =>
       postLogin({ email, password }),
     onSuccess: () => {
-      auth.login();
+      login();
     },
   });
 
   useEffect(() => {
-    if (auth.isAuthenticated) {
-      router.invalidate();
+    if (isAuthenticated) {
+      invalidate();
     }
-  }, [auth.isAuthenticated, router]);
+  }, [isAuthenticated, invalidate]);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    if (isCMA) {
+      passkeyLoginBeginMutate({ abortController: abortController });
+    }
+    return () => {
+      abortController.abort();
+    };
+  }, [isCMA, passkeyLoginBeginMutate]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -78,7 +132,7 @@ function RouteComponent() {
                   </label>
                   <input
                     type="email"
-                    autoComplete="username"
+                    autoComplete="username webauthn"
                     id={emailId}
                     name="email"
                     required
@@ -89,7 +143,7 @@ function RouteComponent() {
                   <label htmlFor={passwordId}>Password:</label>
                   <input
                     type="password"
-                    autoComplete="current-password"
+                    autoComplete="current-password webauthn"
                     id={passwordId}
                     name="password"
                     required
