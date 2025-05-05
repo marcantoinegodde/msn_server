@@ -8,7 +8,11 @@ import {
 
 export const Route = createFileRoute("/_auth/_layout/passkeys")({
   loader: async () => {
-    if (window.PublicKeyCredential) {
+    if (
+      PublicKeyCredential &&
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+      PublicKeyCredential.isConditionalMediationAvailable
+    ) {
       try {
         return await Promise.all([
           PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
