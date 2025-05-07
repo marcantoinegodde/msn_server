@@ -12,6 +12,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// WebauthnRegisterBegin godoc
+//
+//	@Summary		Begin webauthn registration
+//	@Description	Start the webauthn registration process
+//	@Tags			webauthn
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	protocol.PublicKeyCredentialCreationOptions
+//	@Failure		500	{string}	string	"internal server error"
+//	@Router			/auth/webauthn/register/begin [post]
 func (ac *AuthController) RegisterBegin(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*JwtCustomClaims)
@@ -52,6 +62,17 @@ func (ac *AuthController) RegisterBegin(c echo.Context) error {
 	return c.JSON(http.StatusOK, options.Response)
 }
 
+// WebauthnRegisterFinish godoc
+//
+//	@Summary		Finish webauthn registration
+//	@Description	Finish the webauthn registration process
+//	@Tags			webauthn
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		protocol.CredentialCreationResponse	true	"webauthn credential creation data"
+//	@Success		200		{string}	string								"registration success"
+//	@Failure		500		{string}	string								"internal server error"
+//	@Router			/auth/webauthn/register/finish [post]
 func (ac *AuthController) RegisterFinish(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*JwtCustomClaims)

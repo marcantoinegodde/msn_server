@@ -15,6 +15,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// WebauthnLoginBegin godoc
+//
+//	@Summary		Begin webauthn login
+//	@Description	Start the webauthn login process
+//	@Tags			webauthn
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	protocol.PublicKeyCredentialRequestOptions
+//	@Failure		500	{string}	string	"internal server error"
+//	@Router			/auth/webauthn/login/begin [post]
 func (ac *AuthController) LoginBegin(c echo.Context) error {
 	// Initialize session
 	sess, err := session.Get("session", c)
@@ -37,6 +47,17 @@ func (ac *AuthController) LoginBegin(c echo.Context) error {
 	return c.JSON(http.StatusOK, options.Response)
 }
 
+// WebauthnLoginFinish godoc
+//
+//	@Summary		Finish webauthn login
+//	@Description	Finish the webauthn login process
+//	@Tags			webauthn
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		protocol.CredentialAssertionResponse	true	"webauthn credential assertion data"
+//	@Success		200		{string}	string									"login success"
+//	@Failure		500		{string}	string									"internal server error"
+//	@Router			/auth/webauthn/login/finish [post]
 func (ac *AuthController) LoginFinish(c echo.Context) error {
 	// Fetch the session
 	sess, err := session.Get("session", c)
