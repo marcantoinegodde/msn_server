@@ -28,7 +28,7 @@ COPY pkg/ pkg/
 
 COPY --from=frontend-build-stage /app/dist/ internal/web/dist/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /msnserver main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /msnserver main.go
 
 
 FROM scratch
