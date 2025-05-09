@@ -9,8 +9,8 @@ import { z } from "zod";
 
 import userDetails from "@/icons/user_details.png";
 import { queryKeys } from "@/repositories/queryKeys";
-import { getAccount, updateAccount } from "@/repositories/user/repositories";
-import { UpdateAccountBody } from "@/repositories/user/types";
+import { getAccount, updateAccount } from "@/repositories/account/repositories";
+import { UpdateAccountBody } from "@/repositories/account/types";
 import { FieldInfo } from "@/components/FieldInfo";
 import { CountryOptions } from "@/components/CountryOptions";
 import { StateOptions } from "@/components/StateOptions";

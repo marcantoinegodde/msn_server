@@ -13,8 +13,8 @@ type User struct {
 	Email               string `gorm:"uniqueIndex"`
 	Salt                string
 	Password            string
-	WebauthnID          []byte                `gorm:"uniqueIndex"`
-	WebauthnCredentials []webauthn.Credential `gorm:"serializer:json"`
+	WebauthnID          []byte `gorm:"uniqueIndex"`
+	WebauthnCredentials []Credential
 	FirstName           string
 	LastName            string
 	Country             string
@@ -44,5 +44,33 @@ func (u *User) WebAuthnDisplayName() string {
 }
 
 func (u *User) WebAuthnCredentials() []webauthn.Credential {
-	return u.WebauthnCredentials
+	credentials := make([]webauthn.Credential, len(u.WebauthnCredentials))
+	for i, cred := range u.WebauthnCredentials {
+		credentials[i] = webauthn.Credential{
+			ID:              cred.KeyID,
+			PublicKey:       cred.PublicKey,
+			AttestationType: cred.AttestationType,
+			Transport:       cred.Transport,
+			Flags: webauthn.CredentialFlags{
+				UserPresent:    cred.UserPresent,
+				UserVerified:   cred.UserVerified,
+				BackupEligible: cred.BackupEligible,
+				BackupState:    cred.BackupState,
+			},
+			Authenticator: webauthn.Authenticator{
+				AAGUID:       cred.AAGUID,
+				SignCount:    cred.SignCount,
+				CloneWarning: cred.CloneWarning,
+				Attachment:   cred.Attachment,
+			},
+			Attestation: webauthn.CredentialAttestation{
+				ClientDataJSON:     cred.ClientDataJSON,
+				ClientDataHash:     cred.ClientDataHash,
+				AuthenticatorData:  cred.AuthenticatorData,
+				PublicKeyAlgorithm: cred.PublicKeyAlgorithm,
+				Object:             cred.Object,
+			},
+		}
+	}
+	return credentials
 }

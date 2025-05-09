@@ -5,8 +5,8 @@ import { z } from "zod";
 import axios from "axios";
 
 import password from "@/icons/password.png";
-import { updateAccountPassword } from "@/repositories/user/repositories";
-import { updateAccountPasswordBody } from "@/repositories/user/types";
+import { updateAccountPassword } from "@/repositories/account/repositories";
+import { updateAccountPasswordBody } from "@/repositories/account/types";
 import { FieldInfo } from "@/components/FieldInfo";
 
 export const Route = createFileRoute("/_auth/_layout/password")({

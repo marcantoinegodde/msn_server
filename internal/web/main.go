@@ -6,6 +6,7 @@ import (
 	"msnserver/config"
 	"msnserver/internal/web/auth"
 	"msnserver/internal/web/user"
+	"msnserver/internal/web/webauthentication"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -108,8 +109,9 @@ func (ws *WebServer) Start() {
 	}
 
 	// Register routes
-	ac := auth.NewAuthController(&ws.c.WebServer, ws.db, webauthn)
+	ac := auth.NewAuthController(&ws.c.WebServer, ws.db)
 	uc := user.NewUserController(ws.db)
+	wc := webauthentication.NewWebauthnController(&ws.c.WebServer, ws.db, webauthn)
 
 	apiGroup := e.Group("/api")
 	apiGroup.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -120,21 +122,22 @@ func (ws *WebServer) Start() {
 	authGroup.POST("/login", ac.Login)
 	authGroup.POST("/logout", ac.Logout)
 
-	webauthnGroup := authGroup.Group("/webauthn")
-	webauthnGroup.POST("/login/begin", ac.LoginBegin)
-	webauthnGroup.POST("/login/finish", ac.LoginFinish)
+	webauthnGroup := apiGroup.Group("/webauthn")
+	webauthnGroup.POST("/login/begin", wc.LoginBegin)
+	webauthnGroup.POST("/login/finish", wc.LoginFinish)
 	webauthnRestrictedGroup := webauthnGroup.Group("")
 	webauthnRestrictedGroup.Use(echojwt.WithConfig(jwtMiddlewareConfig))
-	webauthnRestrictedGroup.POST("/register/begin", ac.RegisterBegin)
-	webauthnRestrictedGroup.POST("/register/finish", ac.RegisterFinish)
+	webauthnRestrictedGroup.POST("/register/begin", wc.RegisterBegin)
+	webauthnRestrictedGroup.POST("/register/finish", wc.RegisterFinish)
+	webauthnRestrictedGroup.GET("/passkeys", wc.GetPasskeys)
 
 	restrictedGroup := apiGroup.Group("")
 	restrictedGroup.Use(echojwt.WithConfig(jwtMiddlewareConfig))
 
-	userGroup := restrictedGroup.Group("/user")
-	userGroup.GET("/account", uc.GetAccount)
-	userGroup.PATCH("/account", uc.UpdateAccount)
-	userGroup.PUT("/account/password", uc.UpdatePassword)
+	accountGroup := restrictedGroup.Group("/account")
+	accountGroup.GET("", uc.GetAccount)
+	accountGroup.PATCH("", uc.UpdateAccount)
+	accountGroup.PUT("/password", uc.UpdatePassword)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

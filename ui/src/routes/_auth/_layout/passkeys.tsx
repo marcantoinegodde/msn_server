@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import {
   postWebauthnRegisterBegin,
   postWebauthnRegisterFinish,
-} from "@/repositories/auth/repositories";
+} from "@/repositories/webauthn/repositories";
 
 export const Route = createFileRoute("/_auth/_layout/passkeys")({
   loader: async () => {

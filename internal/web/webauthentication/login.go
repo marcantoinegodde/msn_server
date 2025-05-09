@@ -1,11 +1,11 @@
-package auth
+package webauthentication
 
 import (
 	"fmt"
 	"log"
+	"msnserver/internal/web/auth"
 	"msnserver/pkg/database"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -24,8 +24,8 @@ import (
 //	@Produce		json
 //	@Success		200	{object}	protocol.PublicKeyCredentialRequestOptions
 //	@Failure		500	{string}	string	"internal server error"
-//	@Router			/auth/webauthn/login/begin [post]
-func (ac *AuthController) LoginBegin(c echo.Context) error {
+//	@Router			/webauthn/login/begin [post]
+func (ac *WebauthnController) LoginBegin(c echo.Context) error {
 	// Initialize session
 	sess, err := session.Get("session", c)
 	if err != nil {
@@ -57,8 +57,8 @@ func (ac *AuthController) LoginBegin(c echo.Context) error {
 //	@Param			body	body		protocol.CredentialAssertionResponse	true	"webauthn credential assertion data"
 //	@Success		200		{string}	string									"login success"
 //	@Failure		500		{string}	string									"internal server error"
-//	@Router			/auth/webauthn/login/finish [post]
-func (ac *AuthController) LoginFinish(c echo.Context) error {
+//	@Router			/webauthn/login/finish [post]
+func (ac *WebauthnController) LoginFinish(c echo.Context) error {
 	// Fetch the session
 	sess, err := session.Get("session", c)
 	if err != nil {
@@ -83,19 +83,33 @@ func (ac *AuthController) LoginFinish(c echo.Context) error {
 		log.Println("Passkey authenticator clone warning")
 	}
 
-	// Update user's credential
-	for i, cred := range user.WebauthnCredentials {
-		if slices.Equal(cred.ID, credential.ID) {
-			user.WebauthnCredentials[i] = *credential
-			break
-		}
-	}
+	credential.Authenticator.UpdateCounter(1)
 
-	if err := ac.db.Save(&user).Error; err != nil {
+	// Update user's credential
+	cred := database.Credential{
+		KeyID:              credential.ID,
+		PublicKey:          credential.PublicKey,
+		AttestationType:    credential.AttestationType,
+		Transport:          credential.Transport,
+		UserPresent:        credential.Flags.UserPresent,
+		UserVerified:       credential.Flags.UserVerified,
+		BackupEligible:     credential.Flags.BackupEligible,
+		BackupState:        credential.Flags.BackupState,
+		AAGUID:             credential.Authenticator.AAGUID,
+		SignCount:          credential.Authenticator.SignCount,
+		CloneWarning:       credential.Authenticator.CloneWarning,
+		Attachment:         credential.Authenticator.Attachment,
+		ClientDataJSON:     credential.Attestation.ClientDataJSON,
+		ClientDataHash:     credential.Attestation.ClientDataHash,
+		AuthenticatorData:  credential.Attestation.AuthenticatorData,
+		PublicKeyAlgorithm: credential.Attestation.PublicKeyAlgorithm,
+		Object:             credential.Attestation.Object,
+	}
+	if err := ac.db.Model(&database.Credential{}).Where("key_id = ?", cred.KeyID).Updates(cred).Error; err != nil {
 		return err
 	}
 
-	claims := &JwtCustomClaims{
+	claims := &auth.JwtCustomClaims{
 		Name: fmt.Sprintf("%s %s", user.FirstName, user.LastName),
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -135,7 +149,7 @@ func (ac *AuthController) LoginFinish(c echo.Context) error {
 
 func handler(db *gorm.DB, user *database.User) webauthn.DiscoverableUserHandler {
 	return func(rawID, userHandle []byte) (webauthn.User, error) {
-		if err := db.Where("webauthn_id = ?", userHandle).First(user).Error; err != nil {
+		if err := db.Preload("WebauthnCredentials").Where("webauthn_id = ?", userHandle).First(user).Error; err != nil {
 			return nil, err
 		}
 		return user, nil

@@ -35,7 +35,7 @@ type UserResponse struct {
 //	@Produce		json
 //	@Success		200	{object}	UserResponse
 //	@Failure		500	{string}	string	"internal server error"
-//	@Router			/user/account [get]
+//	@Router			/account [get]
 func (uc *UserController) GetAccount(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*auth.JwtCustomClaims)
@@ -69,7 +69,7 @@ func (uc *UserController) GetAccount(c echo.Context) error {
 //	@Success		200		{object}	UserResponse
 //	@Failure		400		{string}	string	"bad request"
 //	@Failure		500		{string}	string	"internal server error"
-//	@Router			/user/account [patch]
+//	@Router			/account [patch]
 func (uc *UserController) UpdateAccount(c echo.Context) error {
 	// Bind request body to UserBody struct
 	var u UserBody

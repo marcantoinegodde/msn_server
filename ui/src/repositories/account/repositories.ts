@@ -4,11 +4,11 @@ import {
   GetAccountResponse,
   UpdateAccountBody,
   updateAccountPasswordBody,
-} from "@/repositories/user/types";
+} from "@/repositories/account/types";
 
 export const getAccount = async () => {
   const response = await axios.get<GetAccountResponse>(
-    `${import.meta.env.VITE_API_URL}/user/account`,
+    `${import.meta.env.VITE_API_URL}/account`,
     { withCredentials: true }
   );
   return response.data;
@@ -16,7 +16,7 @@ export const getAccount = async () => {
 
 export const updateAccount = async (data: UpdateAccountBody) => {
   const response = await axios.patch<GetAccountResponse>(
-    `${import.meta.env.VITE_API_URL}/user/account`,
+    `${import.meta.env.VITE_API_URL}/account`,
     data,
     {
       withCredentials: true,
@@ -28,11 +28,7 @@ export const updateAccount = async (data: UpdateAccountBody) => {
 export const updateAccountPassword = async (
   data: updateAccountPasswordBody
 ) => {
-  await axios.put(
-    `${import.meta.env.VITE_API_URL}/user/account/password`,
-    data,
-    {
-      withCredentials: true,
-    }
-  );
+  await axios.put(`${import.meta.env.VITE_API_URL}/account/password`, data, {
+    withCredentials: true,
+  });
 };

@@ -20,7 +20,7 @@ func Load(c config.Database) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&User{}); err != nil {
+	if err := db.AutoMigrate(&User{}, &Credential{}); err != nil {
 		return nil, err
 	}
 

@@ -1,7 +1,8 @@
-package auth
+package webauthentication
 
 import (
 	"fmt"
+	"msnserver/internal/web/auth"
 	"msnserver/pkg/database"
 	"net/http"
 
@@ -21,10 +22,10 @@ import (
 //	@Produce		json
 //	@Success		200	{object}	protocol.PublicKeyCredentialCreationOptions
 //	@Failure		500	{string}	string	"internal server error"
-//	@Router			/auth/webauthn/register/begin [post]
-func (ac *AuthController) RegisterBegin(c echo.Context) error {
+//	@Router			/webauthn/register/begin [post]
+func (ac *WebauthnController) RegisterBegin(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
-	claims := jwt.Claims.(*JwtCustomClaims)
+	claims := jwt.Claims.(*auth.JwtCustomClaims)
 	email := claims.Subject
 
 	// Initialize session
@@ -72,10 +73,10 @@ func (ac *AuthController) RegisterBegin(c echo.Context) error {
 //	@Param			body	body		protocol.CredentialCreationResponse	true	"webauthn credential creation data"
 //	@Success		200		{string}	string								"registration success"
 //	@Failure		500		{string}	string								"internal server error"
-//	@Router			/auth/webauthn/register/finish [post]
-func (ac *AuthController) RegisterFinish(c echo.Context) error {
+//	@Router			/webauthn/register/finish [post]
+func (ac *WebauthnController) RegisterFinish(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
-	claims := jwt.Claims.(*JwtCustomClaims)
+	claims := jwt.Claims.(*auth.JwtCustomClaims)
 	email := claims.Subject
 
 	// Fetch the session
@@ -104,7 +105,26 @@ func (ac *AuthController) RegisterFinish(c echo.Context) error {
 	}
 
 	// Save the credential to the user
-	user.WebauthnCredentials = append(user.WebauthnCredentials, *credential)
+	cred := database.Credential{
+		KeyID:              credential.ID,
+		PublicKey:          credential.PublicKey,
+		AttestationType:    credential.AttestationType,
+		Transport:          credential.Transport,
+		UserPresent:        credential.Flags.UserPresent,
+		UserVerified:       credential.Flags.UserVerified,
+		BackupEligible:     credential.Flags.BackupEligible,
+		BackupState:        credential.Flags.BackupState,
+		AAGUID:             credential.Authenticator.AAGUID,
+		SignCount:          credential.Authenticator.SignCount,
+		CloneWarning:       credential.Authenticator.CloneWarning,
+		Attachment:         credential.Authenticator.Attachment,
+		ClientDataJSON:     credential.Attestation.ClientDataJSON,
+		ClientDataHash:     credential.Attestation.ClientDataHash,
+		AuthenticatorData:  credential.Attestation.AuthenticatorData,
+		PublicKeyAlgorithm: credential.Attestation.PublicKeyAlgorithm,
+		Object:             credential.Attestation.Object,
+	}
+	user.WebauthnCredentials = append(user.WebauthnCredentials, cred)
 	if err := ac.db.Save(&user).Error; err != nil {
 		return err
 	}

@@ -4,11 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
 import keys from "@/icons/keys.png";
+import { postLogin } from "@/repositories/auth/repositories";
 import {
   postWebauthnLoginBegin,
-  postLogin,
   postWebauthnLoginFinish,
-} from "@/repositories/auth/repositories";
+} from "@/repositories/webauthn/repositories";
 import { PostLoginBody } from "@/repositories/auth/types";
 import { useAuth } from "@/hooks/useAuth";
 

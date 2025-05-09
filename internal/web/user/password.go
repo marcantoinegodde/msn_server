@@ -26,7 +26,7 @@ type PasswordBody struct {
 //	@Success		200			{object}	UserResponse
 //	@Failure		400			{string}	string	"bad request"
 //	@Failure		500			{string}	string	"internal server error"
-//	@Router			/user/account/password [put]
+//	@Router			/account/password [put]
 func (uc *UserController) UpdatePassword(c echo.Context) error {
 	// Bind request body to PasswordBody struct
 	var p PasswordBody

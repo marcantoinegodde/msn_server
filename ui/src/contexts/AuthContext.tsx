@@ -2,8 +2,8 @@ import { useState, useEffect, createContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/repositories/queryKeys";
-import { getAccount } from "@/repositories/user/repositories";
-import { GetAccountResponse } from "@/repositories/user/types";
+import { getAccount } from "@/repositories/account/repositories";
+import { GetAccountResponse } from "@/repositories/account/types";
 
 export interface AuthContext {
   isAuthenticated: boolean;

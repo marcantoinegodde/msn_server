@@ -482,6 +482,82 @@ info:
   title: MSN Server API
   version: "1.0"
 paths:
+  /account:
+    get:
+      description: Get user account information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Get account
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      description: Update user account information
+      parameters:
+      - description: User information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/user.UserBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Update account
+      tags:
+      - user
+  /account/password:
+    put:
+      consumes:
+      - application/json
+      description: Update user password
+      parameters:
+      - description: Password information
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/user.PasswordBody'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Update password
+      tags:
+      - user
   /auth/login:
     post:
       consumes:
@@ -569,7 +645,24 @@ paths:
       summary: Register
       tags:
       - auth
-  /auth/webauthn/login/begin:
+  /healthz:
+    get:
+      description: Get the health status of the application
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Healthz
+      tags:
+      - misc
+  /webauthn/login/begin:
     post:
       consumes:
       - application/json
@@ -588,7 +681,7 @@ paths:
       summary: Begin webauthn login
       tags:
       - webauthn
-  /auth/webauthn/login/finish:
+  /webauthn/login/finish:
     post:
       consumes:
       - application/json
@@ -614,7 +707,7 @@ paths:
       summary: Finish webauthn login
       tags:
       - webauthn
-  /auth/webauthn/register/begin:
+  /webauthn/register/begin:
     post:
       consumes:
       - application/json
@@ -633,7 +726,7 @@ paths:
       summary: Begin webauthn registration
       tags:
       - webauthn
-  /auth/webauthn/register/finish:
+  /webauthn/register/finish:
     post:
       consumes:
       - application/json
@@ -659,97 +752,4 @@ paths:
       summary: Finish webauthn registration
       tags:
       - webauthn
-  /healthz:
-    get:
-      description: Get the health status of the application
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "500":
-          description: internal server error
-          schema:
-            type: string
-      summary: Healthz
-      tags:
-      - misc
-  /user/account:
-    get:
-      description: Get user account information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/user.UserResponse'
-        "500":
-          description: internal server error
-          schema:
-            type: string
-      summary: Get account
-      tags:
-      - user
-    patch:
-      consumes:
-      - application/json
-      description: Update user account information
-      parameters:
-      - description: User information
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/user.UserBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/user.UserResponse'
-        "400":
-          description: bad request
-          schema:
-            type: string
-        "500":
-          description: internal server error
-          schema:
-            type: string
-      summary: Update account
-      tags:
-      - user
-  /user/account/password:
-    put:
-      consumes:
-      - application/json
-      description: Update user password
-      parameters:
-      - description: Password information
-        in: body
-        name: password
-        required: true
-        schema:
-          $ref: '#/definitions/user.PasswordBody'
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/user.UserResponse'
-        "400":
-          description: bad request
-          schema:
-            type: string
-        "500":
-          description: internal server error
-          schema:
-            type: string
-      summary: Update password
-      tags:
-      - user
 swagger: "2.0"
