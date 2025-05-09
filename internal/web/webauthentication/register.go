@@ -23,7 +23,7 @@ import (
 //	@Success		200	{object}	protocol.PublicKeyCredentialCreationOptions
 //	@Failure		500	{string}	string	"internal server error"
 //	@Router			/webauthn/register/begin [post]
-func (ac *WebauthnController) RegisterBegin(c echo.Context) error {
+func (wc *WebauthnController) RegisterBegin(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*auth.JwtCustomClaims)
 	email := claims.Subject
@@ -36,7 +36,7 @@ func (ac *WebauthnController) RegisterBegin(c echo.Context) error {
 
 	// Retrieve user from database
 	var user database.User
-	if err := ac.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := wc.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (ac *WebauthnController) RegisterBegin(c echo.Context) error {
 	}
 
 	// Initialize webauthn registration
-	options, session, err := ac.webauthn.BeginRegistration(&user, webauthn.WithAuthenticatorSelection(authSelect))
+	options, session, err := wc.webauthn.BeginRegistration(&user, webauthn.WithAuthenticatorSelection(authSelect))
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (ac *WebauthnController) RegisterBegin(c echo.Context) error {
 //	@Success		200		{string}	string								"registration success"
 //	@Failure		500		{string}	string								"internal server error"
 //	@Router			/webauthn/register/finish [post]
-func (ac *WebauthnController) RegisterFinish(c echo.Context) error {
+func (wc *WebauthnController) RegisterFinish(c echo.Context) error {
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*auth.JwtCustomClaims)
 	email := claims.Subject
@@ -94,12 +94,12 @@ func (ac *WebauthnController) RegisterFinish(c echo.Context) error {
 
 	// Retrieve user from database
 	var user database.User
-	if err := ac.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := wc.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return err
 	}
 
 	// Finish webauthn registration
-	credential, err := ac.webauthn.FinishRegistration(&user, *sessionData, c.Request())
+	credential, err := wc.webauthn.FinishRegistration(&user, *sessionData, c.Request())
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (ac *WebauthnController) RegisterFinish(c echo.Context) error {
 		Object:             credential.Attestation.Object,
 	}
 	user.WebauthnCredentials = append(user.WebauthnCredentials, cred)
-	if err := ac.db.Save(&user).Error; err != nil {
+	if err := wc.db.Save(&user).Error; err != nil {
 		return err
 	}
 

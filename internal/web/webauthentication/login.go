@@ -25,7 +25,7 @@ import (
 //	@Success		200	{object}	protocol.PublicKeyCredentialRequestOptions
 //	@Failure		500	{string}	string	"internal server error"
 //	@Router			/webauthn/login/begin [post]
-func (ac *WebauthnController) LoginBegin(c echo.Context) error {
+func (wc *WebauthnController) LoginBegin(c echo.Context) error {
 	// Initialize session
 	sess, err := session.Get("session", c)
 	if err != nil {
@@ -33,7 +33,7 @@ func (ac *WebauthnController) LoginBegin(c echo.Context) error {
 	}
 
 	// Initialize webauthn login
-	options, session, err := ac.webauthn.BeginDiscoverableLogin()
+	options, session, err := wc.webauthn.BeginDiscoverableLogin()
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (ac *WebauthnController) LoginBegin(c echo.Context) error {
 //	@Success		200		{string}	string									"login success"
 //	@Failure		500		{string}	string									"internal server error"
 //	@Router			/webauthn/login/finish [post]
-func (ac *WebauthnController) LoginFinish(c echo.Context) error {
+func (wc *WebauthnController) LoginFinish(c echo.Context) error {
 	// Fetch the session
 	sess, err := session.Get("session", c)
 	if err != nil {
@@ -74,7 +74,7 @@ func (ac *WebauthnController) LoginFinish(c echo.Context) error {
 
 	// Retrieve the user and validate the login
 	var user database.User
-	credential, err := ac.webauthn.FinishDiscoverableLogin(handler(ac.db, &user), *sessionData, c.Request())
+	credential, err := wc.webauthn.FinishDiscoverableLogin(handler(wc.db, &user), *sessionData, c.Request())
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (ac *WebauthnController) LoginFinish(c echo.Context) error {
 		PublicKeyAlgorithm: credential.Attestation.PublicKeyAlgorithm,
 		Object:             credential.Attestation.Object,
 	}
-	if err := ac.db.Model(&database.Credential{}).Where("key_id = ?", cred.KeyID).Updates(cred).Error; err != nil {
+	if err := wc.db.Model(&database.Credential{}).Where("key_id = ?", cred.KeyID).Updates(cred).Error; err != nil {
 		return err
 	}
 
@@ -121,12 +121,12 @@ func (ac *WebauthnController) LoginFinish(c echo.Context) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	t, err := token.SignedString([]byte(ac.c.JWTSecret))
+	t, err := token.SignedString([]byte(wc.c.JWTSecret))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "internal server error")
 	}
 
-	secure := ac.c.Env != "development"
+	secure := wc.c.Env != "development"
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    t,

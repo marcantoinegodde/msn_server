@@ -14,7 +14,7 @@ type PasskeyResponse struct {
 	Name string `json:"name"`
 }
 
-func (uc *WebauthnController) GetPasskeys(c echo.Context) error {
+func (wc *WebauthnController) GetPasskeys(c echo.Context) error {
 	// Get user email from JWT
 	jwt := c.Get("user").(*jwt.Token)
 	claims := jwt.Claims.(*auth.JwtCustomClaims)
@@ -22,7 +22,7 @@ func (uc *WebauthnController) GetPasskeys(c echo.Context) error {
 
 	// Retrieve user from database
 	var user database.User
-	if err := uc.db.Preload("WebauthnCredentials").Where("email = ?", email).First(&user).Error; err != nil {
+	if err := wc.db.Preload("WebauthnCredentials").Where("email = ?", email).First(&user).Error; err != nil {
 		return err
 	}
 
