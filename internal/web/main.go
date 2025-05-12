@@ -8,6 +8,7 @@ import (
 	"msnserver/internal/web/user"
 	"msnserver/internal/web/webauthentication"
 	"net/http"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -80,6 +81,9 @@ func (ws *WebServer) Start() {
 		HTML5:      true,
 		Root:       "dist",
 		Filesystem: http.FS(ui),
+		Skipper: func(c echo.Context) bool {
+			return strings.HasPrefix(c.Request().URL.Path, "/api")
+		},
 	}))
 
 	// Register custom validator
@@ -130,6 +134,7 @@ func (ws *WebServer) Start() {
 	webauthnRestrictedGroup.POST("/register/begin", wc.RegisterBegin)
 	webauthnRestrictedGroup.POST("/register/finish", wc.RegisterFinish)
 	webauthnRestrictedGroup.GET("/passkeys", wc.GetPasskeys)
+	webauthnRestrictedGroup.DELETE("/passkeys/:id", wc.DeletePasskey)
 
 	restrictedGroup := apiGroup.Group("")
 	restrictedGroup.Use(echojwt.WithConfig(jwtMiddlewareConfig))
